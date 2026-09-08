@@ -450,7 +450,7 @@
       <div class="main-header">
         <div>
           <h1 id="activeTitle">财务知识问答</h1>
-          <p>基于企业知识库实时检索报销、核算、预算、税务等制度与 FAQ，回答附带来源片段。</p>
+          <p>先检索企业知识库，再由 DeepSeek 大模型组织回答；回复下方附带来源片段。</p>
         </div>
       </div>
 
@@ -470,6 +470,15 @@
     const STORAGE_BASE = "caizhi_api_base";
     const STORAGE_KEY = "caizhi_api_key";
 
+    // 大模型：与灵犀页相同的 OpenAI 兼容流式接口
+    const LLM_API_URL = "https://ai-api.unidtai.com/openapi/llm/compatible-mode/v1/chat/completions";
+    const LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
+    const LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
+    const LLM_SYSTEM =
+      "你是企业内部财务智能知识助手「财知」。请严格依据用户提供的知识库检索片段回答；" +
+      "若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答简洁、分点，使用中文。" +
+      "不要透露底层模型名称。";
+
     const SUGGESTIONS = [
       "差旅费报销需要哪些票据？",
       "费用报销审批流程是怎样的？",
@@ -481,7 +490,8 @@
     const state = {
       datasets: [],
       selectedIds: new Set(),
-      busy: false
+      busy: false,
+      abort: null
     };
 
     const el = {
@@ -610,7 +620,7 @@
         } else if (el.chat.children.length === 0) {
           addMessage(
             "bot",
-            "你好，我是「财知」。已加载知识库，可直接提问财务制度、报销、核算等问题；我会检索知识库并附上来源片段。"
+            "你好，我是「财知」。已加载知识库。提问后会先检索制度片段，再由 DeepSeek 生成回答并附上来源。"
           );
         }
       } catch (err) {
@@ -626,27 +636,34 @@
       who.className = "who";
       who.textContent = role === "user" ? "你" : "财知";
       box.appendChild(who);
-      box.appendChild(document.createTextNode(text));
-      if (sources && sources.length) {
-        const wrap = document.createElement("div");
-        wrap.className = "sources";
-        sources.forEach((s, i) => {
-          const item = document.createElement("div");
-          item.className = "source";
-          const meta = document.createElement("div");
-          meta.className = "meta";
-          const score = s.metadata && (s.metadata.rerank_score != null ? s.metadata.rerank_score : s.metadata.score);
-          meta.textContent =
-            "来源 " + (i + 1) + " · " + (s.title || (s.metadata && s.metadata.document_name) || "文档") +
-            (score != null ? " · score " + Number(score).toFixed(3) : "");
-          item.appendChild(meta);
-          item.appendChild(document.createTextNode(s.content || ""));
-          wrap.appendChild(item);
-        });
-        box.appendChild(wrap);
-      }
+      const body = document.createElement("div");
+      body.className = "body";
+      body.textContent = text || "";
+      box.appendChild(body);
+      if (sources && sources.length) appendSources(box, sources);
       el.chat.appendChild(box);
       el.chat.scrollTop = el.chat.scrollHeight;
+      return { box, body };
+    }
+
+    function appendSources(box, sources) {
+      const wrap = document.createElement("div");
+      wrap.className = "sources";
+      sources.forEach((s, i) => {
+        const item = document.createElement("div");
+        item.className = "source";
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        const score = s.metadata && (s.metadata.rerank_score != null ? s.metadata.rerank_score : s.metadata.score);
+        meta.textContent =
+          "来源 " + (i + 1) + " · " + (s.title || (s.metadata && s.metadata.document_name) || "文档") +
+          (score != null ? " · score " + Number(score).toFixed(3) : "");
+        item.appendChild(meta);
+        const snippet = String(s.content || "").replace(/\s+/g, " ").trim();
+        item.appendChild(document.createTextNode(snippet.length > 360 ? snippet.slice(0, 360) + "…" : snippet));
+        wrap.appendChild(item);
+      });
+      box.appendChild(wrap);
     }
 
     function showTyping() {
@@ -663,25 +680,13 @@
       if (t) t.remove();
     }
 
-    function composeAnswer(query, results) {
-      if (!results || !results.length) {
-        return {
-          text: "知识库中没有检索到足够相关的内容。可换个说法，或检查所选知识库是否包含对应财务制度文档。",
-          sources: []
-        };
-      }
-      const top = results.slice(0, 3);
-      const bullets = top.map((r, i) => {
+    function buildContext(results) {
+      if (!results || !results.length) return "（未检索到相关片段）";
+      return results.slice(0, 5).map((r, i) => {
         const title = r.title || (r.metadata && r.metadata.document_name) || ("片段 " + (i + 1));
         const body = String(r.content || "").replace(/\s+/g, " ").trim();
-        const snippet = body.length > 220 ? body.slice(0, 220) + "…" : body;
-        return (i + 1) + ". 【" + title + "】" + snippet;
-      });
-      const text =
-        "针对「" + query + "」，根据企业知识库检索结果整理如下：\n\n" +
-        bullets.join("\n\n") +
-        "\n\n以上内容来自已选知识库召回片段，请以正式制度原文与财务部门解释为准。";
-      return { text, sources: top };
+        return "[" + (i + 1) + "] " + title + "\n" + (body.length > 1200 ? body.slice(0, 1200) + "…" : body);
+      }).join("\n\n");
     }
 
     async function retrieve(query) {
@@ -715,6 +720,52 @@
       return Array.isArray(data && data.result) ? data.result : [];
     }
 
+    async function streamLLM(messages, onDelta, signal) {
+      const response = await fetch(LLM_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + LLM_API_KEY
+        },
+        body: JSON.stringify({
+          model: LLM_MODEL,
+          messages,
+          stream: true
+        }),
+        signal
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error("LLM HTTP " + response.status + " · " + errText.slice(0, 240));
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let full = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data:")) continue;
+          const data = trimmed.slice(5).trim();
+          if (data === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content;
+            if (delta) {
+              full += delta;
+              onDelta(full, delta);
+            }
+          } catch (_) { /* ignore partial json */ }
+        }
+      }
+      return full;
+    }
+
     async function ask(question) {
       const q = String(question || "").trim();
       if (!q || state.busy) return;
@@ -723,16 +774,40 @@
       addMessage("user", q);
       el.input.value = "";
       showTyping();
+      state.abort = new AbortController();
       try {
         const results = await retrieve(q);
-        const { text, sources } = composeAnswer(q, results);
+        const sources = results.slice(0, 5);
+        const context = buildContext(results);
         hideTyping();
-        addMessage("bot", text, sources);
+        const msg = addMessage("bot", results.length ? "正在根据知识库生成回答…" : "未检索到相关片段，尝试据通则作答…");
+        const userPrompt =
+          "用户问题：\n" + q + "\n\n知识库检索片段：\n" + context +
+          "\n\n请基于上述片段作答；若片段无关，请说明资料不足。";
+        const answer = await streamLLM(
+          [
+            { role: "system", content: LLM_SYSTEM },
+            { role: "user", content: userPrompt }
+          ],
+          (full) => {
+            msg.body.textContent = full;
+            el.chat.scrollTop = el.chat.scrollHeight;
+          },
+          state.abort.signal
+        );
+        if (!answer) msg.body.textContent = "模型未返回内容，请稍后重试。";
+        if (sources.length) appendSources(msg.box, sources);
+        el.chat.scrollTop = el.chat.scrollHeight;
       } catch (err) {
         hideTyping();
-        addMessage("bot", "检索失败：" + (err.message || err));
+        if (err && err.name === "AbortError") {
+          addMessage("bot", "已停止生成。");
+        } else {
+          addMessage("bot", "问答失败：" + (err.message || err));
+        }
       } finally {
         state.busy = false;
+        state.abort = null;
         el.send.disabled = false;
         el.input.focus();
       }
