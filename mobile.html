@@ -90,6 +90,7 @@
       display: flex; align-items: center; gap: 0.35rem; cursor: pointer; padding: 0.2rem 0;
     }
     .src-panel { margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .src-panel[hidden], .src-panel.is-collapsed { display: none !important; }
     .src-item {
       background: #fff; border-radius: 12px; padding: 0.55rem 0.85rem;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
@@ -357,7 +358,7 @@
     toggle.appendChild(label);
     toggle.appendChild(chevron);
     var panel = document.createElement("div");
-    panel.className = "src-panel";
+    panel.className = "src-panel is-collapsed";
     panel.hidden = true;
     sources.forEach(function (s) {
       var item = document.createElement("div");
@@ -383,6 +384,8 @@
     toggle.addEventListener("click", function () {
       var open = panel.hidden;
       panel.hidden = !open;
+      if (open) panel.classList.remove("is-collapsed");
+      else panel.classList.add("is-collapsed");
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       chevron.textContent = open ? "▴" : "▾";
     });

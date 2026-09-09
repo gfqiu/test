@@ -143,6 +143,7 @@
       display: inline-flex; align-items: center; gap: 0.35rem;
     }
     .src-panel { margin-top: 0.45rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .src-panel[hidden], .src-panel.is-collapsed { display: none !important; }
     .src-item {
       background: #fff; border: 1px solid var(--line); border-radius: 10px;
       padding: 0.55rem 0.7rem;
@@ -233,7 +234,8 @@
       0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; transform: translateY(-2px); }
     }
     @media (max-width: 960px) {
-      .layout { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
+      .chat-card { height: min(70vh, 720px); max-height: 70vh; }
     }
   </style>
 </head>
@@ -543,7 +545,7 @@
       sources.length +
       ' 份</span><span class="src-chevron">▾</span>';
     const panel = document.createElement("div");
-    panel.className = "src-panel";
+    panel.className = "src-panel is-collapsed";
     panel.hidden = true;
     sources.forEach((s) => {
       const item = document.createElement("div");
@@ -571,8 +573,10 @@
     toggle.addEventListener("click", () => {
       const open = panel.hidden;
       panel.hidden = !open;
+      panel.classList.toggle("is-collapsed", !open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      toggle.querySelector(".src-chevron").textContent = open ? "▴" : "▾";
+      var chev = toggle.querySelector(".src-chevron");
+      if (chev) chev.textContent = open ? "▴" : "▾";
     });
     block.appendChild(toggle);
     block.appendChild(panel);
