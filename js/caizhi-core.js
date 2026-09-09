@@ -207,19 +207,28 @@
     toggle.type = "button";
     toggle.className = "src-toggle";
     toggle.setAttribute("aria-expanded", "false");
-    toggle.innerHTML = '<span class="src-toggle-label">相关材料 · ' + sources.length + " 份</span><span class="src-chevron">▾</span>";
+    toggle.innerHTML =
+      '<span class="src-toggle-label">相关材料 · ' +
+      sources.length +
+      ' 份</span><span class="src-chevron">▾</span>';
     const panel = document.createElement("div");
     panel.className = "src-panel";
     panel.hidden = true;
-    sources.forEach((s, i) => {
+    sources.forEach((s) => {
       const item = document.createElement("div");
       item.className = "src-item";
       const score = sourceScore(s);
       const name = sourceTitle(s);
       const meta = document.createElement("div");
       meta.className = "src-meta";
-      meta.innerHTML = '<span class="src-clip">📎</span><span class="src-name"></span>';
-      meta.querySelector(".src-name").textContent = name + (score != null ? " · " + score.toFixed(3) : "");
+      const clip = document.createElement("span");
+      clip.className = "src-clip";
+      clip.textContent = "📎";
+      const nameEl = document.createElement("span");
+      nameEl.className = "src-name";
+      nameEl.textContent = name + (score != null ? " · " + score.toFixed(3) : "");
+      meta.appendChild(clip);
+      meta.appendChild(nameEl);
       const body = document.createElement("div");
       body.className = "src-body";
       const snippet = String(s.content || "").replace(/\s+/g, " ").trim();
