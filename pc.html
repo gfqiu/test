@@ -320,7 +320,9 @@
     </div>
   </div>
 
-  <script>
+  
+  
+<script>
 /* 财知 · 共享逻辑：知识库检索 + DeepSeek 流式问答；配置经 localStorage 双端同步 */
 (function (global) {
   const DEFAULT_API_BASE = "https://agent.unidt.com/v1";
@@ -571,29 +573,30 @@
     container.appendChild(block);
   }
 
-  global.Caizhi = {
-    SUGGESTIONS,
-    DEFAULT_API_BASE,
-    DEFAULT_API_KEY,
-    LLM_MODEL,
-    normalizeBase,
-    readConfig,
-    writeConfig,
-    listDatasets,
-    retrieve,
-    buildContext,
-    streamLLM,
-    LLM_SYSTEM,
-    renderCollapsedSources,
-    sourceTitle
-  };
-})(window);
+  Object.assign(global.Caizhi = global.Caizhi || {}, {
+    SUGGESTIONS: SUGGESTIONS,
+    DEFAULT_API_BASE: DEFAULT_API_BASE,
+    DEFAULT_API_KEY: DEFAULT_API_KEY,
+    LLM_MODEL: LLM_MODEL,
+    normalizeBase: normalizeBase,
+    readConfig: readConfig,
+    writeConfig: writeConfig,
+    listDatasets: listDatasets,
+    retrieve: retrieve,
+    buildContext: buildContext,
+    streamLLM: streamLLM,
+    LLM_SYSTEM: LLM_SYSTEM,
+    renderCollapsedSources: renderCollapsedSources,
+    sourceTitle: sourceTitle
+  });
+  // 兼容裸标识符与显式 window 访问
+  try { window.Caizhi = global.Caizhi; } catch (e) {}
+})(typeof window !== 'undefined' ? window : globalThis);
 
-</script>
-  <script>
-    if (typeof window.Caizhi === 'undefined') {
-      throw new Error('Caizhi core missing');
-    }
+  if (!window.Caizhi || typeof window.Caizhi.retrieve !== "function") {
+    console.error("Caizhi core failed to initialize");
+  }
+
     const el = {
       chat: document.getElementById("chat"),
       form: document.getElementById("form"),
@@ -625,7 +628,7 @@
     }
 
     function loadForm() {
-      const cfg = Caizhi.readConfig();
+      const cfg = window.Caizhi.readConfig();
       el.apiBase.value = cfg.apiBase;
       el.apiKey.value = cfg.apiKey;
       el.method.value = cfg.method;
@@ -635,7 +638,7 @@
     }
 
     function persistForm(extra) {
-      Caizhi.writeConfig(
+      window.Caizhi.writeConfig(
         Object.assign(
           {
             apiBase: el.apiBase.value,
@@ -686,7 +689,7 @@
       setStatus(el.connStatus, "连接中…");
       try {
         persistForm();
-        const { list, total } = await Caizhi.listDatasets();
+        const { list, total } = await window.Caizhi.listDatasets();
         state.datasets = list;
         if (!state.selectedIds.size && list.length) {
           state.selectedIds = new Set([list[0].id]);
@@ -737,17 +740,17 @@
       state.abort = new AbortController();
       try {
         persistForm();
-        const results = await Caizhi.retrieve(q, Array.from(state.selectedIds));
+        const results = await window.Caizhi.retrieve(q, Array.from(state.selectedIds));
         const sources = results.slice(0, 5);
         hideTyping();
         const bot = addMsg("bot", results.length ? "正在根据知识库生成回答…" : "未检索到相关片段，尝试通则作答…");
-        const answer = await Caizhi.streamLLM(
+        const answer = await window.Caizhi.streamLLM(
           [
-            { role: "system", content: Caizhi.LLM_SYSTEM },
+            { role: "system", content: window.Caizhi.LLM_SYSTEM },
             {
               role: "user",
               content:
-                "用户问题：\n" + q + "\n\n知识库检索片段：\n" + Caizhi.buildContext(results) +
+                "用户问题：\n" + q + "\n\n知识库检索片段：\n" + window.Caizhi.buildContext(results) +
                 "\n\n请基于上述片段作答；若片段无关，请说明资料不足。"
             }
           ],
@@ -758,7 +761,7 @@
           state.abort.signal
         );
         if (!answer) bot.body.textContent = "模型未返回内容，请稍后重试。";
-        Caizhi.renderCollapsedSources(bot.stack, sources);
+        window.Caizhi.renderCollapsedSources(bot.stack, sources);
         el.chat.scrollTop = el.chat.scrollHeight;
       } catch (err) {
         hideTyping();
@@ -773,7 +776,7 @@
 
     function renderHot() {
       el.hot.innerHTML = "";
-      Caizhi.SUGGESTIONS.forEach((q) => {
+      window.Caizhi.SUGGESTIONS.forEach((q) => {
         const b = document.createElement("button");
         b.type = "button";
         b.textContent = q;
@@ -799,6 +802,7 @@
       "你好，我是财知晓助。可咨询财务制度、报销流程与系统操作问题；支持文字提问。相关材料默认收起，点击后展开。"
     );
     connect();
-  </script>
+  
+</script>
 </body>
 </html>

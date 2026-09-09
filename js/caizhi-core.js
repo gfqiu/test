@@ -248,20 +248,22 @@
     container.appendChild(block);
   }
 
-  global.Caizhi = {
-    SUGGESTIONS,
-    DEFAULT_API_BASE,
-    DEFAULT_API_KEY,
-    LLM_MODEL,
-    normalizeBase,
-    readConfig,
-    writeConfig,
-    listDatasets,
-    retrieve,
-    buildContext,
-    streamLLM,
-    LLM_SYSTEM,
-    renderCollapsedSources,
-    sourceTitle
-  };
-})(window);
+  Object.assign(global.Caizhi = global.Caizhi || {}, {
+    SUGGESTIONS: SUGGESTIONS,
+    DEFAULT_API_BASE: DEFAULT_API_BASE,
+    DEFAULT_API_KEY: DEFAULT_API_KEY,
+    LLM_MODEL: LLM_MODEL,
+    normalizeBase: normalizeBase,
+    readConfig: readConfig,
+    writeConfig: writeConfig,
+    listDatasets: listDatasets,
+    retrieve: retrieve,
+    buildContext: buildContext,
+    streamLLM: streamLLM,
+    LLM_SYSTEM: LLM_SYSTEM,
+    renderCollapsedSources: renderCollapsedSources,
+    sourceTitle: sourceTitle
+  });
+  // 兼容裸标识符与显式 window 访问
+  try { window.Caizhi = global.Caizhi; } catch (e) {}
+})(typeof window !== 'undefined' ? window : globalThis);
