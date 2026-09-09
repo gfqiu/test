@@ -150,24 +150,82 @@
     }
     .src-meta { font-size: 0.8rem; color: var(--blue-deep); font-weight: 500; margin-bottom: 0.25rem; }
     .src-body { font-size: 0.78rem; color: var(--muted); line-height: 1.45; white-space: pre-wrap; }
-    .composer {
+    .composer-box {
       flex-shrink: 0;
       border-top: 1px solid var(--line);
-      padding: 0.85rem 1rem;
-      display: flex; gap: 0.55rem; align-items: center;
       background: #fff;
     }
-    .composer input {
+    .img-previews {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      padding: 0.75rem 1rem 0;
+    }
+    .img-previews[hidden] { display: none !important; }
+    .img-thumb {
+      position: relative; width: 72px; height: 72px; border-radius: 10px;
+      overflow: hidden; border: 1px solid var(--line); background: #f8fafc;
+    }
+    .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .img-thumb button {
+      position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
+      border: 0; border-radius: 50%; background: rgba(15,23,42,0.65); color: #fff;
+      font-size: 12px; line-height: 1; cursor: pointer; padding: 0;
+    }
+    .composer {
+      padding: 0.85rem 1rem;
+      display: flex; gap: 0.55rem; align-items: center;
+    }
+    .composer input[type="text"] {
       flex: 1; border: 1px solid var(--line); border-radius: 999px;
       padding: 0.75rem 1rem; font: inherit; outline: none;
     }
-    .composer input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(79,110,247,0.12); }
+    .composer input[type="text"]:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(79,110,247,0.12); }
     .composer button {
       appearance: none; border: 0; background: var(--blue); color: #fff;
       border-radius: 10px; padding: 0.7rem 1.1rem; font: inherit; font-weight: 500;
       cursor: pointer;
     }
+    .composer button.upload-btn {
+      background: #eef2ff; color: var(--blue-deep); border: 1px solid #c7d2fe;
+      padding: 0.7rem 0.9rem; white-space: nowrap;
+    }
     .composer button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .user-imgs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; }
+    .user-imgs img {
+      width: 88px; height: 88px; object-fit: cover; border-radius: 8px;
+      border: 1px solid rgba(79,110,247,0.2);
+    }
+    .ticket-board { margin-top: 0.55rem; display: flex; flex-direction: column; gap: 0.7rem; }
+    .ticket-card {
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      padding: 0.75rem 0.85rem;
+    }
+    .ticket-card h4 {
+      font-size: 0.85rem; font-weight: 600; margin-bottom: 0.55rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .ticket-card h4 img {
+      width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line);
+    }
+    .ticket-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem 0.65rem;
+    }
+    .ticket-grid label {
+      display: flex; flex-direction: column; gap: 0.2rem;
+      font-size: 0.72rem; color: var(--muted);
+    }
+    .ticket-grid label.full { grid-column: 1 / -1; }
+    .ticket-grid input, .ticket-grid select {
+      border: 1px solid var(--line); border-radius: 8px;
+      padding: 0.4rem 0.5rem; font: inherit; font-size: 0.82rem; color: var(--ink);
+      background: #f8fafc;
+    }
+    .ticket-actions { margin-top: 0.55rem; display: flex; gap: 0.4rem; }
+    .ticket-actions button {
+      appearance: none; border: 1px solid var(--line); background: #fff;
+      border-radius: 8px; padding: 0.35rem 0.7rem; font: inherit; font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .ticket-actions button.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
     .side { display: flex; flex-direction: column; gap: 0.85rem; min-height: 0; max-height: 100%; overflow-y: auto; }
     .side-card { padding: 0.95rem; }
     .side-card h3 {
@@ -263,10 +321,15 @@
           <span class="pill" id="kbPill">知识库加载中…</span>
         </div>
         <div class="chat" id="chat" role="log" aria-live="polite"></div>
-        <form class="composer" id="form" autocomplete="off">
-          <input id="input" type="text" maxlength="800" placeholder="请输入财务制度、流程、操作类问题…" aria-label="问题输入" />
-          <button type="submit" id="send">发送</button>
-        </form>
+        <div class="composer-box">
+          <div class="img-previews" id="imgPreviews" hidden></div>
+          <form class="composer" id="form" autocomplete="off">
+            <button type="button" class="upload-btn" id="btnUpload" title="上传票据图片">上传图片</button>
+            <input id="fileImages" type="file" accept="image/*" multiple hidden />
+            <input id="input" type="text" maxlength="800" placeholder="请输入问题，或上传差旅票据图片识别…" aria-label="问题输入" />
+            <button type="submit" id="send">发送</button>
+          </form>
+        </div>
       </section>
 
       <aside class="side">
@@ -523,6 +586,85 @@
     return full;
   }
 
+  async function completeLLM(messages, signal) {
+    const response = await fetch(LLM_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + LLM_API_KEY
+      },
+      body: JSON.stringify({ model: LLM_MODEL, messages, stream: false }),
+      signal
+    });
+    const text = await response.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (_) { data = { raw: text }; }
+    if (!response.ok) {
+      const msg = (data && (data.message || data.error || data.detail)) || text || response.statusText;
+      throw new Error("LLM HTTP " + response.status + " · " + String(msg).slice(0, 240));
+    }
+    return (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "";
+  }
+
+  function parseJsonLoose(raw) {
+    const text = String(raw || "").trim();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch (_) {}
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenced) {
+      try { return JSON.parse(fenced[1].trim()); } catch (_) {}
+    }
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      try { return JSON.parse(text.slice(start, end + 1)); } catch (_) {}
+    }
+    return null;
+  }
+
+  async function extractTicketFromImage(dataUrl, signal) {
+    const prompt =
+      "你是财务票据 OCR 助手。请识别图片中的文字，并提取差旅/交通票据关键字段。" +
+      "只返回一个 JSON 对象，不要 Markdown，不要解释。字段如下：" +
+      '{"departureCity":"出发城市","departureTime":"出发时间","arrivalCity":"到达城市","arrivalTime":"到达时间","amount":"金额数字字符串","rawText":"图片可见文字摘要"}。' +
+      "无法识别的字段填空字符串。金额只保留数字和小数点。";
+    const content = await completeLLM(
+      [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: dataUrl } }
+          ]
+        }
+      ],
+      signal
+    );
+    const parsed = parseJsonLoose(content) || {};
+    return {
+      departureCity: String(parsed.departureCity || "").trim(),
+      departureTime: String(parsed.departureTime || "").trim(),
+      arrivalCity: String(parsed.arrivalCity || "").trim(),
+      arrivalTime: String(parsed.arrivalTime || "").trim(),
+      amount: String(parsed.amount || "").trim(),
+      rawText: String(parsed.rawText || "").trim()
+    };
+  }
+
+  function randomTripApplicationName() {
+    const cities = ["上海", "北京", "深圳", "杭州", "成都", "广州", "武汉", "南京", "西安", "苏州"];
+    const purposes = ["客户拜访", "项目验收", "总部会议", "培训参会", "巡检支持", "商务洽谈", "渠道对接"];
+    const city = cities[Math.floor(Math.random() * cities.length)];
+    const purpose = purposes[Math.floor(Math.random() * purposes.length)];
+    const seq = String(Math.floor(1000 + Math.random() * 9000));
+    const day = new Date();
+    const stamp =
+      String(day.getFullYear()) +
+      String(day.getMonth() + 1).padStart(2, "0") +
+      String(day.getDate()).padStart(2, "0");
+    return city + purpose + "出差申请-" + stamp + "-" + seq;
+  }
+
   function sourceTitle(s) {
     return s.title || (s.metadata && s.metadata.document_name) || "文档";
   }
@@ -595,6 +737,9 @@
     retrieve: retrieve,
     buildContext: buildContext,
     streamLLM: streamLLM,
+    completeLLM: completeLLM,
+    extractTicketFromImage: extractTicketFromImage,
+    randomTripApplicationName: randomTripApplicationName,
     LLM_SYSTEM: LLM_SYSTEM,
     renderCollapsedSources: renderCollapsedSources,
     sourceTitle: sourceTitle
@@ -624,10 +769,19 @@
       btnSave: document.getElementById("btnSave"),
       connStatus: document.getElementById("connStatus"),
       datasetList: document.getElementById("datasetList"),
-      listStatus: document.getElementById("listStatus")
+      listStatus: document.getElementById("listStatus"),
+      btnUpload: document.getElementById("btnUpload"),
+      fileImages: document.getElementById("fileImages"),
+      imgPreviews: document.getElementById("imgPreviews")
     };
 
-    const state = { datasets: [], selectedIds: new Set(), busy: false, abort: null };
+    const state = {
+      datasets: [],
+      selectedIds: new Set(),
+      busy: false,
+      abort: null,
+      pendingImages: []
+    };
 
     document.getElementById("today").textContent = new Date().toLocaleString("zh-CN", {
       year: "numeric", month: "2-digit", day: "2-digit", weekday: "long"
@@ -724,7 +878,182 @@
       wrap.querySelector(".body").textContent = text || "";
       el.chat.appendChild(wrap);
       el.chat.scrollTop = el.chat.scrollHeight;
-      return { wrap, body: wrap.querySelector(".body"), stack: wrap.querySelector(".stack") };
+      return { wrap, body: wrap.querySelector(".body"), stack: wrap.querySelector(".stack"), bubble: wrap.querySelector(".bubble") };
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function () { resolve(String(reader.result || "")); };
+        reader.onerror = function () { reject(new Error("读取图片失败：" + (file && file.name ? file.name : ""))); };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderPendingPreviews() {
+      el.imgPreviews.innerHTML = "";
+      if (!state.pendingImages.length) {
+        el.imgPreviews.hidden = true;
+        return;
+      }
+      el.imgPreviews.hidden = false;
+      state.pendingImages.forEach(function (item, idx) {
+        const box = document.createElement("div");
+        box.className = "img-thumb";
+        const img = document.createElement("img");
+        img.src = item.dataUrl;
+        img.alt = item.name || ("图片" + (idx + 1));
+        const rm = document.createElement("button");
+        rm.type = "button";
+        rm.setAttribute("aria-label", "移除图片");
+        rm.textContent = "×";
+        rm.addEventListener("click", function () {
+          state.pendingImages.splice(idx, 1);
+          renderPendingPreviews();
+        });
+        box.appendChild(img);
+        box.appendChild(rm);
+        el.imgPreviews.appendChild(box);
+      });
+    }
+
+    async function onFilesSelected(fileList) {
+      const files = Array.from(fileList || []).filter(function (f) {
+        return f && String(f.type || "").indexOf("image/") === 0;
+      });
+      if (!files.length) return;
+      const loaded = await Promise.all(files.map(async function (file) {
+        const dataUrl = await readFileAsDataUrl(file);
+        return { name: file.name || "image", dataUrl: dataUrl };
+      }));
+      state.pendingImages = state.pendingImages.concat(loaded).slice(0, 12);
+      renderPendingPreviews();
+      el.fileImages.value = "";
+    }
+
+    function renderTicketForms(container, tickets) {
+      const board = document.createElement("div");
+      board.className = "ticket-board";
+      tickets.forEach(function (ticket, idx) {
+        const card = document.createElement("div");
+        card.className = "ticket-card";
+        const title = document.createElement("h4");
+        const thumb = document.createElement("img");
+        thumb.src = ticket.dataUrl;
+        thumb.alt = ticket.name || ("票据" + (idx + 1));
+        const titleText = document.createElement("span");
+        titleText.textContent = "票据 " + (idx + 1) + " · " + (ticket.name || "未命名图片");
+        title.appendChild(thumb);
+        title.appendChild(titleText);
+        card.appendChild(title);
+
+        const grid = document.createElement("div");
+        grid.className = "ticket-grid";
+        const fields = [
+          { key: "tripName", label: "关联出差申请", full: true },
+          { key: "departureCity", label: "出发城市" },
+          { key: "departureTime", label: "出发时间" },
+          { key: "arrivalCity", label: "到达城市" },
+          { key: "arrivalTime", label: "到达时间" },
+          { key: "amount", label: "金额" }
+        ];
+        fields.forEach(function (f) {
+          const lab = document.createElement("label");
+          if (f.full) lab.className = "full";
+          lab.appendChild(document.createTextNode(f.label));
+          const input = document.createElement("input");
+          input.type = "text";
+          input.name = f.key;
+          input.value = ticket[f.key] || "";
+          input.dataset.field = f.key;
+          lab.appendChild(input);
+          grid.appendChild(lab);
+        });
+        card.appendChild(grid);
+
+        const actions = document.createElement("div");
+        actions.className = "ticket-actions";
+        const regen = document.createElement("button");
+        regen.type = "button";
+        regen.textContent = "换一个出差申请";
+        regen.addEventListener("click", function () {
+          const input = card.querySelector('input[data-field="tripName"]');
+          if (input) input.value = window.Caizhi.randomTripApplicationName();
+        });
+        const confirm = document.createElement("button");
+        confirm.type = "button";
+        confirm.className = "primary";
+        confirm.textContent = "确认本单";
+        confirm.addEventListener("click", function () {
+          confirm.textContent = "已确认";
+          confirm.disabled = true;
+          card.style.borderColor = "#86efac";
+          card.style.background = "#f0fdf4";
+        });
+        actions.appendChild(regen);
+        actions.appendChild(confirm);
+        card.appendChild(actions);
+        board.appendChild(card);
+      });
+      container.appendChild(board);
+    }
+
+    async function askImages(note) {
+      if (!state.pendingImages.length || state.busy) return;
+      const images = state.pendingImages.slice();
+      const remark = String(note || "").trim();
+      state.pendingImages = [];
+      renderPendingPreviews();
+      state.busy = true;
+      el.send.disabled = true;
+      el.btnUpload.disabled = true;
+
+      const user = addMsg("user", remark || ("已上传 " + images.length + " 张票据图片，请识别并生成填报表单。"));
+      const gallery = document.createElement("div");
+      gallery.className = "user-imgs";
+      images.forEach(function (img) {
+        const node = document.createElement("img");
+        node.src = img.dataUrl;
+        node.alt = img.name;
+        gallery.appendChild(node);
+      });
+      user.bubble.appendChild(gallery);
+
+      showTyping();
+      state.abort = new AbortController();
+      try {
+        const bot = addMsg("bot", "正在解析图片文字并提取差旅字段…");
+        hideTyping();
+        const tickets = [];
+        for (let i = 0; i < images.length; i++) {
+          bot.body.textContent = "正在识别第 " + (i + 1) + "/" + images.length + " 张图片…";
+          const extracted = await window.Caizhi.extractTicketFromImage(images[i].dataUrl, state.abort.signal);
+          tickets.push({
+            name: images[i].name,
+            dataUrl: images[i].dataUrl,
+            tripName: window.Caizhi.randomTripApplicationName(),
+            departureCity: extracted.departureCity,
+            departureTime: extracted.departureTime,
+            arrivalCity: extracted.arrivalCity,
+            arrivalTime: extracted.arrivalTime,
+            amount: extracted.amount,
+            rawText: extracted.rawText
+          });
+        }
+        bot.body.textContent =
+          "已完成 " + tickets.length + " 张图片识别。请核对下方表单；「关联出差申请」已随机生成，可点击更换。";
+        renderTicketForms(bot.stack, tickets);
+        el.chat.scrollTop = el.chat.scrollHeight;
+      } catch (err) {
+        hideTyping();
+        addMsg("bot", "图片识别失败：" + (err.message || err));
+      } finally {
+        state.busy = false;
+        state.abort = null;
+        el.send.disabled = false;
+        el.btnUpload.disabled = false;
+        el.input.focus();
+      }
     }
 
     function showTyping() {
@@ -741,6 +1070,10 @@
     }
 
     async function ask(question) {
+      if (state.pendingImages.length) {
+        await askImages(question);
+        return;
+      }
       const q = String(question || "").trim();
       if (!q || state.busy) return;
       state.busy = true;
@@ -801,16 +1134,26 @@
       setStatus(el.connStatus, "已保存，移动端将同步", "ok");
     });
     el.btnConnect.addEventListener("click", connect);
+    el.btnUpload.addEventListener("click", function () {
+      el.fileImages.click();
+    });
+    el.fileImages.addEventListener("change", function () {
+      onFilesSelected(el.fileImages.files).catch(function (err) {
+        addMsg("bot", "上传失败：" + (err.message || err));
+      });
+    });
     el.form.addEventListener("submit", (e) => {
       e.preventDefault();
-      ask(el.input.value);
+      const q = el.input.value;
+      el.input.value = "";
+      ask(q);
     });
 
     loadForm();
     renderHot();
     addMsg(
       "bot",
-      "你好，我是湘财晓助。可咨询财务制度、报销流程与系统操作问题；支持文字提问。相关材料默认收起，点击后展开。"
+      "你好，我是湘财晓助。可咨询财务制度、报销流程与系统操作；也支持上传多张差旅票据图片，识别后生成可编辑填报表单。相关材料默认收起，点击后展开。"
     );
     connect();
   
