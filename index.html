@@ -954,7 +954,6 @@
           { key: "departureCity", label: "出发城市" },
           { key: "departureTime", label: "出发时间" },
           { key: "arrivalCity", label: "到达城市" },
-          { key: "arrivalTime", label: "到达时间" },
           { key: "amount", label: "金额" }
         ];
         fields.forEach(function (f) {
@@ -1040,8 +1039,7 @@
             rawText: extracted.rawText
           });
         }
-        bot.body.textContent =
-          "已完成 " + tickets.length + " 张图片识别。请核对下方表单；「关联出差申请」已随机生成，可点击更换。";
+        bot.body.textContent = "已完成 " + tickets.length + " 张图片识别。请核对下方表单。";
         renderTicketForms(bot.stack, tickets);
         el.chat.scrollTop = el.chat.scrollHeight;
       } catch (err) {
