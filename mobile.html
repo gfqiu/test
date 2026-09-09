@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-build="xiangcai-mobile-self-20260909">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta name="xiangcai-build" content="mobile-self-no-caizhi-20260909" />
   <title>湘财 · 企微智能体</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -170,6 +173,8 @@
   <script>
 (function () {
   "use strict";
+  // 自包含运行时：禁止依赖全局 Caizhi / caizhi-core.js（避免旧缓存页裸引用报错）
+  window.__XIANGCAI_MOBILE_BUILD__ = "self-20260909";
 
   var DEFAULT_API_BASE = "https://agent.unidt.com/v1";
   var DEFAULT_API_KEY = "dataset-adoZr8SvffoDDlAGZibbdAip";
