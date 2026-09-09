@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>财知晓助 | 财务智能办公助手</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #4f6ef7;
+      --blue-deep: #3b57e0;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --bg: #f3f5f9;
+      --card: #fff;
+      --navy: #243447;
+      --peach: #f8ebe4;
+      --shadow: 0 10px 28px rgba(31, 41, 55, 0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Noto Sans SC", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+    .top {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      padding: 0.65rem 1.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .top .crumb strong { color: var(--ink); font-weight: 600; }
+    .top-right { display: flex; align-items: center; gap: 0.75rem; }
+    .badge {
+      background: #fde68a; color: #92400e;
+      padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.72rem;
+    }
+    .avatar {
+      display: flex; align-items: center; gap: 0.4rem; color: var(--ink);
+    }
+    .avatar i {
+      width: 1.55rem; height: 1.55rem; border-radius: 50%;
+      background: var(--blue); color: #fff; display: inline-flex;
+      align-items: center; justify-content: center; font-size: 0.7rem; font-style: normal;
+    }
+    .page {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 1.35rem 1.25rem 2rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .hero p {
+      margin-top: 0.4rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .layout {
+      margin-top: 1.15rem;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 1rem;
+      align-items: start;
+    }
+    .chat-card, .side-card, .cfg-drawer {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(229, 231, 235, 0.9);
+    }
+    .chat-card {
+      min-height: 640px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-head {
+      padding: 0.9rem 1.1rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 600;
+    }
+    .chat-head .pill {
+      margin-left: auto;
+      background: #eef2ff;
+      color: var(--blue-deep);
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+    }
+    .chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.95rem;
+      background: #fcfcfd;
+      min-height: 420px;
+    }
+    .msg { max-width: 86%; display: flex; gap: 0.55rem; animation: rise 0.3s ease both; }
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+    .msg .ava {
+      width: 2rem; height: 2rem; border-radius: 50%;
+      background: var(--blue); color: #fff; display: flex;
+      align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0;
+    }
+    .msg.user .ava { background: #94a3b8; }
+    .bubble {
+      background: #f3f4f6;
+      border-radius: 12px;
+      padding: 0.8rem 0.95rem;
+      line-height: 1.65;
+      font-size: 0.92rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.user .bubble { background: #e8eeff; }
+    .src-block { margin-top: 0.5rem; }
+    .src-toggle {
+      appearance: none; border: 1px solid var(--line); background: #fff;
+      border-radius: 8px; padding: 0.35rem 0.65rem; cursor: pointer;
+      font: inherit; font-size: 0.78rem; color: var(--muted);
+      display: inline-flex; align-items: center; gap: 0.35rem;
+    }
+    .src-panel { margin-top: 0.45rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .src-item {
+      background: #fff; border: 1px solid var(--line); border-radius: 10px;
+      padding: 0.55rem 0.7rem;
+    }
+    .src-meta { font-size: 0.8rem; color: var(--blue-deep); font-weight: 500; margin-bottom: 0.25rem; }
+    .src-body { font-size: 0.78rem; color: var(--muted); line-height: 1.45; white-space: pre-wrap; }
+    .composer {
+      border-top: 1px solid var(--line);
+      padding: 0.85rem 1rem;
+      display: flex; gap: 0.55rem; align-items: center;
+      background: #fff;
+    }
+    .composer input {
+      flex: 1; border: 1px solid var(--line); border-radius: 999px;
+      padding: 0.75rem 1rem; font: inherit; outline: none;
+    }
+    .composer input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(79,110,247,0.12); }
+    .composer button {
+      appearance: none; border: 0; background: var(--blue); color: #fff;
+      border-radius: 10px; padding: 0.7rem 1.1rem; font: inherit; font-weight: 500;
+      cursor: pointer;
+    }
+    .composer button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .side { display: flex; flex-direction: column; gap: 0.85rem; }
+    .side-card { padding: 0.95rem; }
+    .side-card h3 {
+      font-size: 0.92rem; margin-bottom: 0.65rem; font-weight: 600;
+    }
+    .hot-q {
+      display: flex; flex-direction: column; gap: 0.45rem;
+    }
+    .hot-q button {
+      appearance: none; text-align: left; border: 1px solid var(--line);
+      background: #f8fafc; border-radius: 10px; padding: 0.55rem 0.7rem;
+      font: inherit; font-size: 0.82rem; color: var(--ink); cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .hot-q button:hover { background: #eef2ff; border-color: #c7d2fe; }
+    .core { background: var(--peach); border-color: transparent; }
+    .core ul { padding-left: 1.1rem; font-size: 0.82rem; line-height: 1.7; color: #4b5563; }
+    .value {
+      background: var(--navy); color: #e5e7eb; border: 0;
+    }
+    .value h3 { color: #fff; }
+    .value p { font-size: 0.82rem; line-height: 1.65; opacity: 0.92; }
+    .cfg-drawer {
+      padding: 0.75rem 0.85rem;
+      opacity: 0.88;
+    }
+    .cfg-drawer summary {
+      cursor: pointer; font-size: 0.78rem; color: var(--muted);
+      list-style: none; display: flex; align-items: center; justify-content: space-between;
+    }
+    .cfg-drawer summary::-webkit-details-marker { display: none; }
+    .cfg-body { margin-top: 0.65rem; display: flex; flex-direction: column; gap: 0.45rem; }
+    .field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.2rem; }
+    .field input, .field select {
+      width: 100%; border: 1px solid var(--line); border-radius: 8px;
+      padding: 0.4rem 0.5rem; font: inherit; font-size: 0.8rem;
+    }
+    .cfg-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .cfg-actions button {
+      appearance: none; border: 1px solid var(--line); background: #fff;
+      border-radius: 8px; padding: 0.35rem 0.55rem; font: inherit; font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .cfg-actions button.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .dataset-list { max-height: 160px; overflow: auto; display: flex; flex-direction: column; gap: 0.3rem; }
+    .dataset-item {
+      text-align: left; border: 1px solid var(--line); background: #fafafa;
+      border-radius: 8px; padding: 0.4rem 0.5rem; cursor: pointer; font-size: 0.75rem;
+    }
+    .dataset-item.active { border-color: var(--blue); background: #eef2ff; }
+    .dataset-item strong { display: block; font-size: 0.78rem; }
+    .status { font-size: 0.72rem; color: var(--muted); min-height: 1em; }
+    .status.ok { color: #059669; }
+    .status.err { color: #dc2626; }
+    .typing { display: flex; gap: 0.25rem; padding: 0.65rem 0.8rem; background: #f3f4f6; border-radius: 12px; align-self: flex-start; }
+    .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); animation: blink 1.1s infinite; display: block; }
+    .typing i:nth-child(2) { animation-delay: 0.15s; }
+    .typing i:nth-child(3) { animation-delay: 0.3s; }
+    .mobile-link {
+      display: inline-block; margin-top: 0.55rem; font-size: 0.8rem; color: var(--blue-deep); text-decoration: none;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; transform: translateY(-2px); }
+    }
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="crumb">财知财务 AI 平台 / <strong>财知晓助 · 财务智能办公助手</strong></div>
+    <div class="top-right">
+      <span class="badge">在线知识库</span>
+      <span id="today"></span>
+      <div class="avatar"><i>财</i><span>财务用户</span></div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="hero">
+      <h1>财知晓助 | 财务智能办公助手</h1>
+      <p>财务知识库标准问答 · 流程指引 · 操作说明 | 知识库文档由企业提供，结构化入库</p>
+      <a class="mobile-link" href="mobile.html">打开移动端页面 →</a>
+    </div>
+
+    <div class="layout">
+      <section class="chat-card">
+        <div class="chat-head">
+          <span>🤖 智能问答</span>
+          <span class="pill" id="kbPill">知识库加载中…</span>
+        </div>
+        <div class="chat" id="chat" role="log" aria-live="polite"></div>
+        <form class="composer" id="form" autocomplete="off">
+          <input id="input" type="text" maxlength="800" placeholder="请输入财务制度、流程、操作类问题…" aria-label="问题输入" />
+          <button type="submit" id="send">发送</button>
+        </form>
+      </section>
+
+      <aside class="side">
+        <div class="side-card">
+          <h3>热门问题</h3>
+          <div class="hot-q" id="hot"></div>
+        </div>
+        <div class="side-card core">
+          <h3>三项核心服务</h3>
+          <ul>
+            <li>标准问答（制度 / 流程）</li>
+            <li>流程指引（业务场景逐步说明）</li>
+            <li>操作说明（系统填报与单据）</li>
+          </ul>
+        </div>
+        <div class="side-card value">
+          <h3>价值</h3>
+          <p>减少重复咨询，提升响应效率；答案可追溯到来源文档，权威可核验。</p>
+        </div>
+
+        <details class="cfg-drawer" id="cfgDrawer">
+          <summary>高级 · 服务对接 / 知识库 <span>⚙</span></summary>
+          <div class="cfg-body">
+            <div class="field">
+              <label>API Base（含 /v1）</label>
+              <input id="apiBase" type="text" />
+            </div>
+            <div class="field">
+              <label>API-Key</label>
+              <input id="apiKey" type="password" />
+            </div>
+            <div class="field">
+              <label>检索方式</label>
+              <select id="method">
+                <option value="hybrid_search">混合检索</option>
+                <option value="semantic_search">语义检索</option>
+                <option value="full_text_search">全文检索</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Top K</label>
+              <input id="topK" type="text" />
+            </div>
+            <div class="field">
+              <label>Score 阈值</label>
+              <input id="threshold" type="text" />
+            </div>
+            <div class="cfg-actions">
+              <button type="button" class="primary" id="btnConnect">连接</button>
+              <button type="button" id="btnSave">保存</button>
+            </div>
+            <p class="status" id="connStatus"></p>
+            <div class="section-label" style="font-size:0.72rem;color:var(--muted);">知识库（点击多选）</div>
+            <div class="dataset-list" id="datasetList"></div>
+            <p class="status" id="listStatus"></p>
+          </div>
+        </details>
+      </aside>
+    </div>
+  </div>
+
+  <script src="js/caizhi-core.js"></script>
+  <script>
+    const el = {
+      chat: document.getElementById("chat"),
+      form: document.getElementById("form"),
+      input: document.getElementById("input"),
+      send: document.getElementById("send"),
+      hot: document.getElementById("hot"),
+      kbPill: document.getElementById("kbPill"),
+      apiBase: document.getElementById("apiBase"),
+      apiKey: document.getElementById("apiKey"),
+      method: document.getElementById("method"),
+      topK: document.getElementById("topK"),
+      threshold: document.getElementById("threshold"),
+      btnConnect: document.getElementById("btnConnect"),
+      btnSave: document.getElementById("btnSave"),
+      connStatus: document.getElementById("connStatus"),
+      datasetList: document.getElementById("datasetList"),
+      listStatus: document.getElementById("listStatus")
+    };
+
+    const state = { datasets: [], selectedIds: new Set(), busy: false, abort: null };
+
+    document.getElementById("today").textContent = new Date().toLocaleString("zh-CN", {
+      year: "numeric", month: "2-digit", day: "2-digit", weekday: "long"
+    });
+
+    function setStatus(node, text, kind) {
+      node.textContent = text || "";
+      node.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function loadForm() {
+      const cfg = Caizhi.readConfig();
+      el.apiBase.value = cfg.apiBase;
+      el.apiKey.value = cfg.apiKey;
+      el.method.value = cfg.method;
+      el.topK.value = cfg.topK;
+      el.threshold.value = cfg.threshold;
+      state.selectedIds = new Set(cfg.selectedIds || []);
+    }
+
+    function persistForm(extra) {
+      Caizhi.writeConfig(
+        Object.assign(
+          {
+            apiBase: el.apiBase.value,
+            apiKey: el.apiKey.value,
+            method: el.method.value,
+            topK: el.topK.value,
+            threshold: el.threshold.value,
+            selectedIds: Array.from(state.selectedIds)
+          },
+          extra || {}
+        )
+      );
+    }
+
+    function renderDatasets() {
+      el.datasetList.innerHTML = "";
+      if (!state.datasets.length) {
+        el.datasetList.innerHTML = '<div class="status">暂无知识库</div>';
+        return;
+      }
+      state.datasets.forEach((ds) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dataset-item" + (state.selectedIds.has(ds.id) ? " active" : "");
+        btn.innerHTML = "<strong></strong><span></span>";
+        btn.querySelector("strong").textContent = ds.name || ds.id;
+        btn.querySelector("span").textContent =
+          (ds.document_count != null ? ds.document_count + " 篇" : "") +
+          (ds.word_count != null ? " · " + ds.word_count + " 字" : "");
+        btn.addEventListener("click", () => {
+          if (state.selectedIds.has(ds.id)) state.selectedIds.delete(ds.id);
+          else state.selectedIds.add(ds.id);
+          persistForm();
+          renderDatasets();
+          updatePill();
+        });
+        el.datasetList.appendChild(btn);
+      });
+    }
+
+    function updatePill() {
+      const n = state.datasets.reduce((acc, d) => acc + (d.document_count || 0), 0);
+      const sel = state.selectedIds.size;
+      el.kbPill.textContent = "知识库已入库 " + n + " 篇 · 已选 " + sel;
+    }
+
+    async function connect() {
+      setStatus(el.connStatus, "连接中…");
+      try {
+        persistForm();
+        const { list, total } = await Caizhi.listDatasets();
+        state.datasets = list;
+        if (!state.selectedIds.size && list.length) {
+          state.selectedIds = new Set([list[0].id]);
+          persistForm();
+        }
+        renderDatasets();
+        updatePill();
+        setStatus(el.connStatus, "已连接 · 共 " + (total != null ? total : list.length) + " 个", "ok");
+        setStatus(el.listStatus, "修改后自动同步到移动端", "ok");
+      } catch (err) {
+        setStatus(el.connStatus, String(err.message || err), "err");
+        setStatus(el.listStatus, "连接失败", "err");
+      }
+    }
+
+    function addMsg(role, text) {
+      const wrap = document.createElement("div");
+      wrap.className = "msg " + role;
+      wrap.innerHTML =
+        '<div class="ava">' + (role === "user" ? "我" : "助") + '</div><div class="stack"><div class="bubble"><div class="body"></div></div></div>';
+      wrap.querySelector(".body").textContent = text || "";
+      el.chat.appendChild(wrap);
+      el.chat.scrollTop = el.chat.scrollHeight;
+      return { wrap, body: wrap.querySelector(".body"), stack: wrap.querySelector(".stack") };
+    }
+
+    function showTyping() {
+      const t = document.createElement("div");
+      t.className = "typing";
+      t.id = "typing";
+      t.innerHTML = "<i></i><i></i><i></i>";
+      el.chat.appendChild(t);
+      el.chat.scrollTop = el.chat.scrollHeight;
+    }
+    function hideTyping() {
+      const t = document.getElementById("typing");
+      if (t) t.remove();
+    }
+
+    async function ask(question) {
+      const q = String(question || "").trim();
+      if (!q || state.busy) return;
+      state.busy = true;
+      el.send.disabled = true;
+      addMsg("user", q);
+      el.input.value = "";
+      showTyping();
+      state.abort = new AbortController();
+      try {
+        persistForm();
+        const results = await Caizhi.retrieve(q, Array.from(state.selectedIds));
+        const sources = results.slice(0, 5);
+        hideTyping();
+        const bot = addMsg("bot", results.length ? "正在根据知识库生成回答…" : "未检索到相关片段，尝试通则作答…");
+        const answer = await Caizhi.streamLLM(
+          [
+            { role: "system", content: Caizhi.LLM_SYSTEM },
+            {
+              role: "user",
+              content:
+                "用户问题：\n" + q + "\n\n知识库检索片段：\n" + Caizhi.buildContext(results) +
+                "\n\n请基于上述片段作答；若片段无关，请说明资料不足。"
+            }
+          ],
+          (full) => {
+            bot.body.textContent = full;
+            el.chat.scrollTop = el.chat.scrollHeight;
+          },
+          state.abort.signal
+        );
+        if (!answer) bot.body.textContent = "模型未返回内容，请稍后重试。";
+        Caizhi.renderCollapsedSources(bot.stack, sources);
+        el.chat.scrollTop = el.chat.scrollHeight;
+      } catch (err) {
+        hideTyping();
+        addMsg("bot", "问答失败：" + (err.message || err));
+      } finally {
+        state.busy = false;
+        state.abort = null;
+        el.send.disabled = false;
+        el.input.focus();
+      }
+    }
+
+    function renderHot() {
+      el.hot.innerHTML = "";
+      Caizhi.SUGGESTIONS.forEach((q) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = q;
+        b.addEventListener("click", () => ask(q));
+        el.hot.appendChild(b);
+      });
+    }
+
+    el.btnSave.addEventListener("click", () => {
+      persistForm();
+      setStatus(el.connStatus, "已保存，移动端将同步", "ok");
+    });
+    el.btnConnect.addEventListener("click", connect);
+    el.form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      ask(el.input.value);
+    });
+
+    loadForm();
+    renderHot();
+    addMsg(
+      "bot",
+      "你好，我是财知晓助。可咨询财务制度、报销流程与系统操作问题；支持文字提问。相关材料默认收起，点击后展开。"
+    );
+    connect();
+  </script>
+</body>
+</html>
