@@ -55,6 +55,13 @@
       width: min(1200px, 100%);
       margin: 0 auto;
       padding: 20px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .hero {
+      width: min(800px, 100%);
+      text-align: center;
     }
     .hero h1 {
       font-size: 24px;
@@ -64,6 +71,7 @@
     }
     .layout {
       margin-top: 12px;
+      width: min(800px, 100%);
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       gap: 0;
@@ -83,7 +91,7 @@
       box-sizing: border-box;
     }
     .chat-card {
-      width: min(800px, 100%);
+      width: 100%;
       flex: 1;
       min-height: 0;
       display: flex;
@@ -206,6 +214,36 @@
       color: var(--text);
       white-space: pre-wrap;
       word-break: break-word;
+    }
+    .bubble.has-table { white-space: normal; padding: 8px; }
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      line-height: 1.4;
+      background: #fff;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .info-table th,
+    .info-table td {
+      border: 1px solid var(--split);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .info-table th {
+      width: 32%;
+      font-weight: 600;
+      color: var(--text-2);
+      background: var(--ai-card);
+      white-space: nowrap;
+    }
+    .info-table td {
+      color: var(--text);
+      font-weight: 400;
+      word-break: break-all;
     }
     .msg.user .bubble {
       background: var(--brand-soft);
@@ -547,6 +585,7 @@
                     <button type="button" class="common-btn" id="btnCommon" title="常用功能" aria-label="常用功能" aria-haspopup="true" aria-expanded="false">常用 ›</button>
                     <div class="common-panel" id="commonPanel" role="menu">
                       <button type="button" class="upload-btn" id="btnUpload" title="上传发票图片" role="menuitem">上传发票</button>
+                      <button type="button" class="upload-btn" id="btnInvoice" title="查看开票信息" role="menuitem">开票信息</button>
                     </div>
                   </div>
                   <input id="fileImages" type="file" accept="image/*" multiple hidden />
@@ -580,7 +619,7 @@
   const LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
   const LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
   const LLM_SYSTEM =
-    "你是企业内部财务智能知识助手「湘财晓助」。请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答使用自然、口语化的中文，可分点叙述，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要在回答中写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处标注。直接给出可执行的说明即可。不要透露底层模型名称。";
+    "你是企业内部财务智能知识助手「湘财晓助」。请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答使用自然中文，尽量简短精炼，只保留必要信息，避免冗长铺垫、重复说明和客套话。可分点，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处。不要透露底层模型名称。";
 
   const SUGGESTIONS = [
     "员工差旅费报销标准",
@@ -954,6 +993,7 @@
       commonMenu: document.getElementById("commonMenu"),
       btnCommon: document.getElementById("btnCommon"),
       btnUpload: document.getElementById("btnUpload"),
+      btnInvoice: document.getElementById("btnInvoice"),
       fileImages: document.getElementById("fileImages"),
       imgPreviews: document.getElementById("imgPreviews"),
       btnNewChat: document.getElementById("btnNewChat"),
@@ -973,7 +1013,16 @@
       historyOpen: false
     };
     const HISTORY_KEY = "caizhi_chat_history_v1";
-    const WELCOME_TEXT = "你好，我是湘财晓助。可以回答财务制度、报销流程等财务相关的知识；也可点「常用 → 上传发票」识别票据并生成填报表单。";
+    const INVOICE_MARKER = "__INVOICE_INFO__";
+    const INVOICE_ROWS = [
+      ["发票抬头", "湘潭钢铁集团有限公司"],
+      ["纳税人识别号", "9XXXXXXXXXXXXXXXX"],
+      ["地址", "湖南省湘潭市岳塘区"],
+      ["电话", "0731-58651114"],
+      ["开户行", "XX银行股份有限公司XXX支行"],
+      ["银行账号", "3XXXXXXXXXXXXXXX"]
+    ];
+    const WELCOME_TEXT = "你好，我是湘财晓助。可答财务制度与报销问题；也可在「常用」上传发票或查看开票信息。";
     const BOT_FACE_SVG =
       '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="20" r="2.4" fill="#fff"/><circle cx="31" cy="20" r="2.4" fill="#fff"/><path d="M17 29c2.4 3.2 11.6 3.2 14 0" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>';
 
@@ -1051,6 +1100,42 @@
       el.chat.appendChild(wrap);
       el.chat.scrollTop = el.chat.scrollHeight;
       return { wrap, body: wrap.querySelector(".body"), stack: wrap.querySelector(".stack"), bubble: wrap.querySelector(".bubble") };
+    }
+
+    function appendInvoiceTable(bubble) {
+      bubble.classList.add("has-table");
+      const body = bubble.querySelector(".body");
+      if (body) {
+        body.textContent = INVOICE_MARKER;
+        body.hidden = true;
+      }
+      const table = document.createElement("table");
+      table.className = "info-table";
+      table.setAttribute("aria-label", "开票信息");
+      const tbody = document.createElement("tbody");
+      INVOICE_ROWS.forEach(function (row) {
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        th.scope = "row";
+        th.textContent = row[0];
+        const td = document.createElement("td");
+        td.textContent = row[1];
+        tr.appendChild(th);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      bubble.appendChild(table);
+    }
+
+    function showInvoiceInfo() {
+      if (state.busy) return;
+      el.commonMenu.classList.remove("open");
+      el.btnCommon.setAttribute("aria-expanded", "false");
+      addMsg("user", "开票信息");
+      const bot = addMsg("bot", "");
+      appendInvoiceTable(bot.bubble);
+      el.chat.scrollTop = el.chat.scrollHeight;
     }
 
     function readFileAsDataUrl(file) {
@@ -1265,7 +1350,7 @@
               role: "user",
               content:
                 "用户问题：\n" + q + "\n\n知识库检索片段：\n" + window.Caizhi.buildContext(results) +
-                "\n\n请基于上述片段作答；若片段无关，请说明资料不足。用自然中文分点说明，不要使用 Markdown（如 **），不要写“依据：制度第×条/附录”等出处。"
+                "\n\n请基于上述片段作答；若片段无关，请说明资料不足。回答尽量简短，只给关键结论与必要条件，不要冗长展开。不要使用 Markdown（如 **），不要写“依据：制度第×条/附录”等出处。"
             }
           ],
           (full) => {
@@ -1308,6 +1393,10 @@
       const msgs = [];
       nodes.forEach(function (node) {
         const role = node.classList.contains("user") ? "user" : "bot";
+        if (node.querySelector(".info-table")) {
+          msgs.push({ role: role, text: INVOICE_MARKER });
+          return;
+        }
         const body = node.querySelector(".body");
         const text = body ? body.textContent : "";
         if (!text) return;
@@ -1383,6 +1472,11 @@
       state.pendingImages = [];
       renderPendingPreviews();
       (item.messages || []).forEach(function (m) {
+        if (m.text === INVOICE_MARKER) {
+          const bot = addMsg("bot", "");
+          appendInvoiceTable(bot.bubble);
+          return;
+        }
         addMsg(m.role === "user" ? "user" : "bot", m.text || "");
       });
       setHistoryOpen(false);
@@ -1415,6 +1509,9 @@
       el.commonMenu.classList.remove("open");
       el.btnCommon.setAttribute("aria-expanded", "false");
       el.fileImages.click();
+    });
+    el.btnInvoice.addEventListener("click", function () {
+      showInvoiceInfo();
     });
     document.addEventListener("click", function (e) {
       if (!el.commonMenu.contains(e.target)) {
