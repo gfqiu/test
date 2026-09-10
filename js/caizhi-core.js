@@ -13,9 +13,7 @@
   const LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
   const LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
   const LLM_SYSTEM =
-    "你是企业内部财务智能知识助手「湘财」。请严格依据用户提供的知识库检索片段回答；" +
-    "若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答简洁、分点，使用中文。" +
-    "不要透露底层模型名称。";
+    "你是企业内部财务智能知识助手「湘财晓助」。请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答使用自然、口语化的中文，可分点叙述，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要在回答中写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处标注。直接给出可执行的说明即可。不要透露底层模型名称。";
 
   const SUGGESTIONS = [
     "差旅费报销需要哪些票据？",
@@ -248,6 +246,25 @@
     container.appendChild(block);
   }
 
+
+  function polishAnswer(text) {
+    var s = String(text || "");
+    s = s.replace(/\*\*/g, "");
+    s = s.replace(/__/g, "");
+    s = s.replace(/`+/g, "");
+    s = s.replace(/^#{1,6}\s+/gm, "");
+    s = s.replace(/^\s*>\s?/gm, "");
+    s = s.replace(/^\s*[-*+]\s+/gm, "• ");
+    s = s.replace(/^\s*\d+\.\s+/gm, function (m) { return m; });
+    s = s.replace(/（\s*依据[：:][^）]*）/g, "");
+    s = s.replace(/\(\s*依据[：:][^)]*\)/g, "");
+    s = s.replace(/依据[：:][^\n。；;]*[。；;]?/g, "");
+    s = s.replace(/（\s*见?(?:制度|办法|规定|附录|附件)[^）]*）/g, "");
+    s = s.replace(/[ \t]+\n/g, "\n");
+    s = s.replace(/\n{3,}/g, "\n\n");
+    return s.trim();
+  }
+
   Object.assign(global.Caizhi = global.Caizhi || {}, {
     SUGGESTIONS: SUGGESTIONS,
     DEFAULT_API_BASE: DEFAULT_API_BASE,
@@ -261,6 +278,7 @@
     buildContext: buildContext,
     streamLLM: streamLLM,
     LLM_SYSTEM: LLM_SYSTEM,
+    polishAnswer: polishAnswer,
     renderCollapsedSources: renderCollapsedSources,
     sourceTitle: sourceTitle
   });

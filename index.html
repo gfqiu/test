@@ -417,9 +417,7 @@
   const LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
   const LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
   const LLM_SYSTEM =
-    "你是企业内部财务智能知识助手「湘财」。请严格依据用户提供的知识库检索片段回答；" +
-    "若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答简洁、分点，使用中文。" +
-    "不要透露底层模型名称。";
+    "你是企业内部财务智能知识助手「湘财晓助」。请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答使用自然、口语化的中文，可分点叙述，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要在回答中写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处标注。直接给出可执行的说明即可。不要透露底层模型名称。";
 
   const SUGGESTIONS = [
     "差旅费的报销标准和审批流程是怎样的？",
@@ -733,6 +731,25 @@
     container.appendChild(block);
   }
 
+
+  function polishAnswer(text) {
+    var s = String(text || "");
+    s = s.replace(/\*\*/g, "");
+    s = s.replace(/__/g, "");
+    s = s.replace(/`+/g, "");
+    s = s.replace(/^#{1,6}\s+/gm, "");
+    s = s.replace(/^\s*>\s?/gm, "");
+    s = s.replace(/^\s*[-*+]\s+/gm, "• ");
+    s = s.replace(/^\s*\d+\.\s+/gm, function (m) { return m; });
+    s = s.replace(/（\s*依据[：:][^）]*）/g, "");
+    s = s.replace(/\(\s*依据[：:][^)]*\)/g, "");
+    s = s.replace(/依据[：:][^\n。；;]*[。；;]?/g, "");
+    s = s.replace(/（\s*见?(?:制度|办法|规定|附录|附件)[^）]*）/g, "");
+    s = s.replace(/[ \t]+\n/g, "\n");
+    s = s.replace(/\n{3,}/g, "\n\n");
+    return s.trim();
+  }
+
   Object.assign(global.Caizhi = global.Caizhi || {}, {
     SUGGESTIONS: SUGGESTIONS,
     DEFAULT_API_BASE: DEFAULT_API_BASE,
@@ -749,6 +766,7 @@
     extractTicketFromImage: extractTicketFromImage,
     randomTripApplicationName: randomTripApplicationName,
     LLM_SYSTEM: LLM_SYSTEM,
+    polishAnswer: polishAnswer,
     renderCollapsedSources: renderCollapsedSources,
     sourceTitle: sourceTitle
   });
@@ -1094,16 +1112,17 @@
               role: "user",
               content:
                 "用户问题：\n" + q + "\n\n知识库检索片段：\n" + window.Caizhi.buildContext(results) +
-                "\n\n请基于上述片段作答；若片段无关，请说明资料不足。"
+                "\n\n请基于上述片段作答；若片段无关，请说明资料不足。用自然中文分点说明，不要使用 Markdown（如 **），不要写“依据：制度第×条/附录”等出处。"
             }
           ],
           (full) => {
-            bot.body.textContent = full;
+            bot.body.textContent = window.Caizhi.polishAnswer(full);
             el.chat.scrollTop = el.chat.scrollHeight;
           },
           state.abort.signal
         );
         if (!answer) bot.body.textContent = "模型未返回内容，请稍后重试。";
+        else bot.body.textContent = window.Caizhi.polishAnswer(answer);
         window.Caizhi.renderCollapsedSources(bot.stack, sources);
         el.chat.scrollTop = el.chat.scrollHeight;
       } catch (err) {
@@ -1159,10 +1178,7 @@
 
     loadForm();
     renderQuickQ();
-    addMsg(
-      "bot",
-      "你好，我是湘财晓助。可咨询财务制度、报销流程与系统操作；也可点「常用 → 上传发票」识别票据并生成填报表单。相关材料默认收起，点击后展开。"
-    );
+    addMsg("bot", "你好，我是湘财晓助。可以回答财务制度、报销流程等财务相关的知识；也可点「常用 → 上传发票」识别票据并生成填报表单。");
     connect();
   
 </script>
