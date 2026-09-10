@@ -740,13 +740,16 @@
     s = s.replace(/^#{1,6}\s+/gm, "");
     s = s.replace(/^\s*>\s?/gm, "");
     s = s.replace(/^\s*[-*+]\s+/gm, "• ");
-    s = s.replace(/^\s*\d+\.\s+/gm, function (m) { return m; });
-    s = s.replace(/（\s*依据[：:][^）]*）/g, "");
-    s = s.replace(/\(\s*依据[：:][^)]*\)/g, "");
+    s = s.replace(/（[^）]*依据[^）]*）/g, "");
+    s = s.replace(/\([^)]*依据[^)]*\)/g, "");
     s = s.replace(/依据[：:][^\n。；;]*[。；;]?/g, "");
+    s = s.replace(/（[^）]*(?:第\s*\d+\s*条|附录\s*[A-Za-z0-9]+)[^）]*）/g, "");
+    s = s.replace(/\([^)]*(?:第\s*\d+\s*条|附录\s*[A-Za-z0-9]+)[^)]*\)/g, "");
     s = s.replace(/（\s*见?(?:制度|办法|规定|附录|附件)[^）]*）/g, "");
+    s = s.replace(/(^|[\s，、；;])\*([^*\n]+)\*(?=[\s，、。；;]|$)/g, "$1$2");
     s = s.replace(/[ \t]+\n/g, "\n");
     s = s.replace(/\n{3,}/g, "\n\n");
+    s = s.replace(/[ \t]{2,}/g, " ");
     return s.trim();
   }
 
