@@ -62,16 +62,13 @@
       color: var(--title);
       letter-spacing: 0.01em;
     }
-    .mobile-link {
-      display: inline-block; margin-top: 8px; font-size: 13px; color: var(--icon-blue); text-decoration: none;
-    }
     .layout {
-      margin-top: 16px;
+      margin-top: 12px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 260px;
-      gap: 16px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
       align-items: stretch;
-      height: calc(100vh - 100px);
+      height: calc(100vh - 72px);
       min-height: 560px;
     }
     .chat-stage {
@@ -237,19 +234,19 @@
       background: #fff;
       border: 1px solid var(--border);
       border-bottom: 0;
-      border-radius: 36px 36px 0 0;
-      padding: 16px 16px 24px;
+      border-radius: 28px 28px 0 0;
+      padding: 10px 16px 12px;
     }
     .action-bar {
       display: flex;
       align-items: center;
       gap: 4px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       width: min(390px, 100%);
     }
     .history-icon-btn {
       appearance: none;
-      width: 38px; height: 38px; min-width: 38px;
+      width: 34px; height: 34px; min-width: 34px;
       border-radius: 999px;
       border: 0;
       background: var(--brand-soft);
@@ -259,17 +256,17 @@
     }
     .history-icon-btn:hover { background: var(--icon-bg); }
     .history-icon-btn[aria-expanded="true"] { background: var(--icon-bg); }
-    .history-icon-btn svg { width: 18px; height: 18px; }
+    .history-icon-btn svg { width: 16px; height: 16px; }
     .new-chat-btn {
       appearance: none;
-      height: 34px;
+      height: 32px;
       border: 0;
       border-radius: 999px;
-      padding: 0 18px;
+      padding: 0 14px;
       background: var(--brand);
       color: #fff;
       font: inherit;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       white-space: nowrap;
@@ -277,15 +274,15 @@
     .new-chat-btn:hover { filter: brightness(1.05); }
     .new-chat-btn:active { transform: scale(0.98); }
     .quick-q {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      margin-bottom: 12px;
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 8px;
     }
     .quick-q button {
       appearance: none;
       border: 1px solid var(--card-border);
       background: #fff;
       border-radius: 8px;
-      padding: 6px 10px;
+      padding: 4px 8px;
       cursor: pointer;
       font: inherit;
       font-size: 13px;
@@ -300,7 +297,7 @@
     }
     .img-previews {
       display: flex; flex-wrap: wrap; gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
     .img-previews[hidden] { display: none !important; }
     .img-thumb {
@@ -316,7 +313,7 @@
     .composer {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 6px;
     }
     .composer input[type="text"] {
       width: 100%;
@@ -324,16 +321,18 @@
       background: transparent;
       padding: 0;
       font: inherit;
-      font-size: 18px;
+      font-size: 16px;
       color: var(--text);
       outline: none;
+      line-height: 1.4;
+      min-height: 24px;
     }
     .composer input[type="text"]::placeholder { color: var(--placeholder); }
     .composer-tools {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
     }
     .composer .common-menu { position: relative; flex-shrink: 0; }
     .composer button.common-btn {
@@ -342,10 +341,10 @@
       background: transparent;
       color: var(--common);
       font: inherit;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
-      padding: 8px 4px;
-      min-height: 44px;
+      padding: 4px 2px;
+      min-height: 36px;
       cursor: pointer;
       white-space: nowrap;
     }
@@ -377,7 +376,7 @@
     }
     .composer button.send-btn {
       appearance: none;
-      width: 48px; height: 48px; min-width: 48px;
+      width: 40px; height: 40px; min-width: 40px;
       border: 0; border-radius: 999px;
       background: var(--brand);
       color: #fff;
@@ -391,7 +390,7 @@
       cursor: not-allowed;
       filter: none;
     }
-    .composer button.send-btn svg { width: 20px; height: 20px; display: block; }
+    .composer button.send-btn svg { width: 18px; height: 18px; display: block; }
     .composer-box:focus-within {
       box-shadow: inset 0 0 0 1px rgba(0, 71, 234, 0.18);
     }
@@ -436,42 +435,8 @@
       border-radius: 999px; min-height: 36px; padding: 8px 16px;
     }
     .ticket-actions button.primary:disabled { background: var(--disabled); border-color: var(--disabled); }
-    .side { display: flex; flex-direction: column; gap: 12px; min-height: 0; max-height: 100%; overflow-y: auto; }
-    .cfg-drawer {
-      background: #fff;
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 12px;
-      opacity: 0.92;
-    }
-    .cfg-drawer summary {
-      cursor: pointer; font-size: 13px; color: var(--hint);
-      list-style: none; display: flex; align-items: center; justify-content: space-between;
-    }
-    .cfg-drawer summary::-webkit-details-marker { display: none; }
-    .cfg-body { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .field label { display: block; font-size: 13px; color: var(--hint); margin-bottom: 4px; }
-    .field input, .field select {
-      width: 100%; border: 1px solid var(--border); border-radius: 8px;
-      padding: 8px 10px; font: inherit; font-size: 13px;
-    }
-    .cfg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .cfg-actions button {
-      appearance: none; border: 1px solid var(--card-border); background: #fff;
-      border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px;
-      cursor: pointer;
-    }
-    .cfg-actions button.primary { background: var(--brand); color: #fff; border-color: var(--brand); border-radius: 999px; }
-    .dataset-list { max-height: 160px; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
-    .dataset-item {
-      text-align: left; border: 1px solid var(--card-border); background: #fff;
-      border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 13px;
-    }
-    .dataset-item.active { border-color: #C4D5FD; background: var(--brand-soft); color: var(--brand); }
-    .dataset-item strong { display: block; font-size: 13px; }
-    .status { font-size: 13px; color: var(--hint); min-height: 1em; }
-    .status.ok { color: #059669; }
-    .status.err { color: #dc2626; }
+    .side { display: none; }
+    .cfg-drawer { display: none; }
     .typing {
       display: flex; gap: 6px; padding: 12px 16px;
       background: var(--ai-card); border-radius: 16px; align-self: flex-start;
@@ -552,7 +517,6 @@
   <div class="page">
     <div class="hero">
       <h1>湘财晓助 | 财务智能办公助手</h1>
-      <a class="mobile-link" href="mobile.html?v=self-20260910">打开移动端页面 →</a>
     </div>
 
     <div class="layout">
@@ -597,46 +561,6 @@
           </div>
         </section>
       </div>
-
-      <aside class="side">
-        <details class="cfg-drawer" id="cfgDrawer">
-          <summary>高级 · 服务对接 / 知识库 <span aria-hidden="true">⚙</span></summary>
-          <div class="cfg-body">
-            <div class="field">
-              <label>API Base（含 /v1）</label>
-              <input id="apiBase" type="text" />
-            </div>
-            <div class="field">
-              <label>API-Key</label>
-              <input id="apiKey" type="password" />
-            </div>
-            <div class="field">
-              <label>检索方式</label>
-              <select id="method">
-                <option value="hybrid_search">混合检索</option>
-                <option value="semantic_search">语义检索</option>
-                <option value="full_text_search">全文检索</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Top K</label>
-              <input id="topK" type="text" />
-            </div>
-            <div class="field">
-              <label>Score 阈值</label>
-              <input id="threshold" type="text" />
-            </div>
-            <div class="cfg-actions">
-              <button type="button" class="primary" id="btnConnect">连接</button>
-              <button type="button" id="btnSave">保存</button>
-            </div>
-            <p class="status" id="connStatus"></p>
-            <div class="section-label" style="font-size:0.72rem;color:var(--muted);">知识库（点击多选）</div>
-            <div class="dataset-list" id="datasetList"></div>
-            <p class="status" id="listStatus"></p>
-          </div>
-        </details>
-      </aside>
     </div>
   </div>
 
@@ -1029,16 +953,6 @@
       input: document.getElementById("input"),
       send: document.getElementById("send"),
       quickQ: document.getElementById("quickQ"),
-      apiBase: document.getElementById("apiBase"),
-      apiKey: document.getElementById("apiKey"),
-      method: document.getElementById("method"),
-      topK: document.getElementById("topK"),
-      threshold: document.getElementById("threshold"),
-      btnConnect: document.getElementById("btnConnect"),
-      btnSave: document.getElementById("btnSave"),
-      connStatus: document.getElementById("connStatus"),
-      datasetList: document.getElementById("datasetList"),
-      listStatus: document.getElementById("listStatus"),
       commonMenu: document.getElementById("commonMenu"),
       btnCommon: document.getElementById("btnCommon"),
       btnUpload: document.getElementById("btnUpload"),
@@ -1090,30 +1004,21 @@
       el.chat.appendChild(card);
     }
 
-    function setStatus(node, text, kind) {
-      node.textContent = text || "";
-      node.className = "status" + (kind ? " " + kind : "");
-    }
-
     function loadForm() {
       const cfg = window.Caizhi.readConfig();
-      el.apiBase.value = cfg.apiBase;
-      el.apiKey.value = cfg.apiKey;
-      el.method.value = cfg.method;
-      el.topK.value = cfg.topK;
-      el.threshold.value = cfg.threshold;
       state.selectedIds = new Set(cfg.selectedIds || []);
     }
 
     function persistForm(extra) {
+      const cfg = window.Caizhi.readConfig();
       window.Caizhi.writeConfig(
         Object.assign(
           {
-            apiBase: el.apiBase.value,
-            apiKey: el.apiKey.value,
-            method: el.method.value,
-            topK: el.topK.value,
-            threshold: el.threshold.value,
+            apiBase: cfg.apiBase,
+            apiKey: cfg.apiKey,
+            method: cfg.method,
+            topK: cfg.topK,
+            threshold: cfg.threshold,
             selectedIds: Array.from(state.selectedIds)
           },
           extra || {}
@@ -1121,47 +1026,16 @@
       );
     }
 
-    function renderDatasets() {
-      el.datasetList.innerHTML = "";
-      if (!state.datasets.length) {
-        el.datasetList.innerHTML = '<div class="status">暂无知识库</div>';
-        return;
-      }
-      state.datasets.forEach((ds) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "dataset-item" + (state.selectedIds.has(ds.id) ? " active" : "");
-        btn.innerHTML = "<strong></strong><span></span>";
-        btn.querySelector("strong").textContent = ds.name || ds.id;
-        btn.querySelector("span").textContent =
-          (ds.document_count != null ? ds.document_count + " 篇" : "") +
-          (ds.word_count != null ? " · " + ds.word_count + " 字" : "");
-        btn.addEventListener("click", () => {
-          if (state.selectedIds.has(ds.id)) state.selectedIds.delete(ds.id);
-          else state.selectedIds.add(ds.id);
-          persistForm();
-          renderDatasets();
-        });
-        el.datasetList.appendChild(btn);
-      });
-    }
-
     async function connect() {
-      setStatus(el.connStatus, "连接中…");
       try {
-        persistForm();
-        const { list, total } = await window.Caizhi.listDatasets();
+        const { list } = await window.Caizhi.listDatasets();
         state.datasets = list;
         if (!state.selectedIds.size && list.length) {
           state.selectedIds = new Set([list[0].id]);
           persistForm();
         }
-        renderDatasets();
-        setStatus(el.connStatus, "已连接 · 共 " + (total != null ? total : list.length) + " 个", "ok");
-        setStatus(el.listStatus, "修改后自动同步到移动端", "ok");
       } catch (err) {
-        setStatus(el.connStatus, String(err.message || err), "err");
-        setStatus(el.listStatus, "连接失败", "err");
+        console.warn("知识库连接失败", err);
       }
     }
 
@@ -1533,11 +1407,6 @@
       });
     }
 
-    el.btnSave.addEventListener("click", () => {
-      persistForm();
-      setStatus(el.connStatus, "已保存，移动端将同步", "ok");
-    });
-    el.btnConnect.addEventListener("click", connect);
     el.btnCommon.addEventListener("click", function (e) {
       e.stopPropagation();
       const open = !el.commonMenu.classList.contains("open");
