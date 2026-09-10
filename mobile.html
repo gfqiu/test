@@ -1,34 +1,45 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-build="xiangcai-mobile-self-20260909">
+<html lang="zh-CN" data-build="xiangcai-mobile-self-20260910">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
-  <meta name="xiangcai-build" content="mobile-self-no-caizhi-20260909" />
+  <meta name="xiangcai-build" content="mobile-self-no-caizhi-20260910" />
   <title>湘财晓助 | 企微智能体</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --blue: #3b82f6;
-      --blue-deep: #2563eb;
-      --blue-soft: #dbeafe;
-      --bubble-bot: #e8f1ff;
-      --ink: #1e293b;
-      --muted: #64748b;
-      --line: rgba(37, 99, 235, 0.12);
-      --bg: linear-gradient(180deg, #f0f6ff 0%, #f8fafc 45%, #eef4ff 100%);
+      --bg-page: #FFFFFF;
+      --ai-card: #F2F4FB;
+      --brand: #0047EA;
+      --brand-soft: #EBF1FE;
+      --icon-bg: #DEE6FF;
+      --icon-blue: #2A67F4;
+      --title: #001036;
+      --text: #23272E;
+      --ai-desc: #596793;
+      --text-2: #535F6E;
+      --hint: #8C97A6;
+      --placeholder: #AFB6CC;
+      --border: #E7E8ED;
+      --card-border: #D3D9E9;
+      --disabled: #B9CAF1;
+      --common: #303E5D;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
     body {
-      font-family: "Noto Sans SC", sans-serif;
-      color: var(--ink);
-      background: var(--bg);
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+      color: var(--text);
+      background: var(--bg-page);
       display: flex;
       justify-content: center;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid rgba(0, 71, 234, 0.35);
+      outline-offset: 2px;
     }
     .phone {
       width: min(430px, 100%);
@@ -37,114 +48,194 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      background: var(--bg-page);
+      position: relative;
     }
     .topbar {
       flex-shrink: 0;
-      background: var(--blue);
-      color: #fff;
+      min-height: 56px;
+      padding: 10px 16px;
+      padding-top: calc(10px + env(safe-area-inset-top, 0px));
+      background: #fff;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.85rem 1rem;
-      padding-top: calc(0.85rem + env(safe-area-inset-top, 0px));
-      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+      gap: 8px;
     }
-    .topbar .title { font-weight: 600; font-size: 1.05rem; }
+    .topbar .title {
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--title);
+    }
     .topbar button {
-      appearance: none; border: 0; background: transparent; color: #fff;
-      font-size: 1.15rem; width: 2rem; height: 2rem; cursor: pointer;
+      appearance: none; border: 0; background: var(--brand-soft); color: var(--icon-blue);
+      width: 36px; height: 36px; min-width: 36px; border-radius: 999px;
+      cursor: pointer; font-size: 18px; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
     }
     .chat {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 1rem 0.9rem 0.5rem;
+      padding: 16px 16px 12px;
       display: flex;
       flex-direction: column;
-      gap: 0.85rem;
+      gap: 16px;
+      background: var(--bg-page);
     }
+    .welcome-card {
+      width: 100%;
+      background: var(--ai-card);
+      border-radius: 20px;
+      padding: 12px 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: pop 0.28s ease both;
+    }
+    .welcome-main {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .welcome-hello {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--title);
+      margin-bottom: 8px;
+    }
+    .welcome-desc {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ai-desc);
+      line-height: 1.6;
+    }
+    .welcome-avatar {
+      width: 80px; height: 80px; flex-shrink: 0; border-radius: 15px;
+      position: relative; display: grid; place-items: center;
+    }
+    .welcome-avatar::before {
+      content: "";
+      position: absolute; inset: -8px; border-radius: 20px;
+      background: radial-gradient(circle at 40% 35%, rgba(122, 92, 255, 0.28), transparent 62%),
+                  radial-gradient(circle at 70% 70%, rgba(255, 186, 170, 0.35), transparent 60%);
+      filter: blur(8px); z-index: 0;
+    }
+    .welcome-avatar-face {
+      position: relative; z-index: 1;
+      width: 64px; height: 64px; border-radius: 14px;
+      background: linear-gradient(145deg, #7b8cff 0%, #a78bfa 42%, #ffd6c9 100%);
+      display: grid; place-items: center;
+    }
+    .welcome-avatar-face svg { width: 34px; height: 34px; display: block; }
     .msg { max-width: 88%; animation: pop 0.28s ease both; }
     .msg.user { align-self: flex-end; }
-    .msg.bot { align-self: flex-start; display: flex; gap: 0.45rem; }
+    .msg.bot { align-self: flex-start; display: flex; gap: 10px; }
     .avatar {
-      width: 1.7rem; height: 1.7rem; border-radius: 50%;
-      background: var(--blue-soft); color: var(--blue-deep);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; flex-shrink: 0; margin-top: 0.15rem;
+      width: 36px; height: 36px; border-radius: 14px;
+      background: linear-gradient(145deg, #7b8cff 0%, #a78bfa 45%, #ffd6c9 100%);
+      display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;
+      overflow: hidden;
     }
+    .avatar svg { width: 20px; height: 20px; display: block; }
     .bubble {
-      border-radius: 1rem;
-      padding: 0.75rem 0.9rem;
-      line-height: 1.65;
-      font-size: 0.92rem;
+      border-radius: 16px;
+      padding: 12px 16px;
+      line-height: 1.6;
+      font-size: 15px;
       white-space: pre-wrap;
       word-break: break-word;
-      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
     }
-    .msg.user .bubble { background: #fff; border-bottom-right-radius: 0.35rem; }
-    .msg.bot .bubble { background: var(--bubble-bot); color: #1e3a5f; border-bottom-left-radius: 0.35rem; }
+    .msg.user .bubble {
+      background: var(--brand-soft);
+      color: var(--text);
+      border-radius: 16px 16px 4px 16px;
+    }
+    .msg.bot .bubble {
+      background: var(--ai-card);
+      color: var(--text);
+    }
     .col { display: flex; flex-direction: column; max-width: 100%; }
-    .feedback { display: flex; gap: 0.55rem; justify-content: flex-end; margin-top: 0.45rem; opacity: 0.55; font-size: 0.85rem; }
-    .src-block { margin-top: 0.55rem; }
+    .feedback { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; opacity: 0.45; font-size: 14px; }
+    .src-block { margin-top: 8px; }
     .src-toggle {
-      appearance: none; border: 0; background: transparent;
-      color: var(--muted); font: inherit; font-size: 0.8rem;
-      display: flex; align-items: center; gap: 0.35rem; cursor: pointer; padding: 0.2rem 0;
+      appearance: none; border: 1px solid var(--card-border); background: #fff;
+      color: var(--ai-desc); font: inherit; font-size: 13px;
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      padding: 6px 10px; border-radius: 8px;
     }
-    .src-panel { margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .src-panel { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
     .src-panel[hidden], .src-panel.is-collapsed { display: none !important; }
     .src-item {
-      background: #fff; border-radius: 12px; padding: 0.55rem 0.85rem;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
-      border: 1px solid var(--line);
+      background: #fff; border-radius: 12px; padding: 10px 12px;
+      border: 1px solid var(--card-border);
     }
-    .src-meta { display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: var(--blue-deep); font-weight: 500; }
-    .src-body { margin-top: 0.35rem; font-size: 0.75rem; color: var(--muted); line-height: 1.45; white-space: pre-wrap; }
+    .src-meta { font-size: 13px; color: var(--icon-blue); font-weight: 500; }
+    .src-body { margin-top: 4px; font-size: 13px; color: var(--text-2); line-height: 1.45; white-space: pre-wrap; }
     .dock {
       flex-shrink: 0;
-      padding: 0.55rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid var(--line);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-bottom: 0;
+      border-radius: 36px 36px 0 0;
+      padding: 16px 16px calc(24px + env(safe-area-inset-bottom, 0px));
     }
-    .chips { display: flex; gap: 0.45rem; overflow-x: auto; padding-bottom: 0.55rem; }
+    .action-bar {
+      display: flex; align-items: center; gap: 4px; margin-bottom: 12px;
+    }
+    .new-chat-btn {
+      appearance: none; height: 34px; border: 0; border-radius: 999px;
+      padding: 0 16px; background: var(--brand); color: #fff;
+      font: inherit; font-size: 16px; cursor: pointer;
+    }
+    .chips {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px;
+    }
     .chips::-webkit-scrollbar { display: none; }
     .chip {
       appearance: none; flex-shrink: 0;
-      border: 1px solid rgba(59, 130, 246, 0.35);
-      background: #fff; color: var(--blue-deep);
-      font: inherit; font-size: 0.78rem;
-      padding: 0.4rem 0.75rem; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--card-border);
+      background: #fff; color: var(--ai-desc);
+      font: inherit; font-size: 13px;
+      padding: 6px 10px; border-radius: 8px; cursor: pointer;
       white-space: nowrap;
     }
-    .chip.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
-    .composer { display: flex; gap: 0.5rem; align-items: center; }
+    .chip:hover { border-color: #C4D5FD; color: var(--brand); }
+    .composer { display: flex; flex-direction: column; gap: 12px; }
     .composer input {
-      flex: 1; border: 0; background: #fff; border-radius: 999px;
-      padding: 0.8rem 1rem; font: inherit; font-size: 0.92rem;
-      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-      outline: none;
+      width: 100%; border: 0; background: transparent;
+      font: inherit; font-size: 18px; color: var(--text); outline: none;
+    }
+    .composer input::placeholder { color: var(--placeholder); }
+    .composer-tools {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .composer .hint-left {
+      font-size: 13px; color: var(--hint);
     }
     .composer .send {
-      width: 2.7rem; height: 2.7rem; border-radius: 50%;
-      border: 0; background: var(--blue); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 1.05rem;
-      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+      width: 48px; height: 48px; border-radius: 999px;
+      border: 0; background: var(--brand); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
     }
-    .composer .send:disabled { opacity: 0.5; cursor: not-allowed; }
+    .composer .send svg { width: 20px; height: 20px; display: block; }
+    .composer .send:disabled { background: var(--disabled); cursor: not-allowed; }
+    .dock:focus-within { box-shadow: inset 0 0 0 1px rgba(0, 71, 234, 0.18); }
     .typing {
-      align-self: flex-start; display: flex; gap: 0.28rem;
-      padding: 0.7rem 0.9rem; background: var(--bubble-bot); border-radius: 1rem;
+      align-self: flex-start; display: flex; gap: 6px;
+      padding: 12px 16px; background: var(--ai-card); border-radius: 16px;
     }
     .typing i {
-      width: 6px; height: 6px; border-radius: 50%; background: var(--blue);
+      width: 6px; height: 6px; border-radius: 50%; background: var(--icon-blue);
       display: block; animation: blink 1.1s infinite ease-in-out;
     }
     .typing i:nth-child(2) { animation-delay: 0.15s; }
     .typing i:nth-child(3) { animation-delay: 0.3s; }
-    .hint { font-size: 0.72rem; color: var(--muted); text-align: center; padding: 0.2rem 0 0.35rem; }
+    .hint { font-size: 13px; color: var(--hint); text-align: center; padding: 4px 0 0; }
     @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     @keyframes blink {
       0%, 80%, 100% { opacity: 0.25; }
@@ -157,24 +248,30 @@
     <header class="topbar">
       <button type="button" aria-label="返回" onclick="location.href='index.html'">‹</button>
       <div class="title">湘财晓助</div>
-      <button type="button" aria-label="菜单" onclick="location.href='index.html'">⋯</button>
+      <button type="button" aria-label="更多" onclick="location.href='index.html'">⋯</button>
     </header>
     <div class="chat" id="chat" role="log" aria-live="polite"></div>
     <div class="dock">
+      <div class="action-bar">
+        <button type="button" class="new-chat-btn" id="btnNewChat" aria-label="新对话">新对话</button>
+      </div>
       <div class="chips" id="chips"></div>
       <form class="composer" id="form" autocomplete="off">
         <input id="input" type="text" maxlength="800" placeholder="有什么可以帮到你的" aria-label="问题输入" />
-        <button class="send" type="submit" id="send" aria-label="发送">➤</button>
+        <div class="composer-tools">
+          <span class="hint-left" id="hint">配置请在 PC 端侧栏修改</span>
+          <button class="send" type="submit" id="send" aria-label="发送">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
       </form>
-      <div class="hint" id="hint">配置请在 PC 端侧栏修改，本页自动同步</div>
     </div>
   </div>
 
   <script>
 (function () {
   "use strict";
-  // 自包含运行时：禁止依赖全局 Caizhi / caizhi-core.js（避免旧缓存页裸引用报错）
-  window.__XIANGCAI_MOBILE_BUILD__ = "self-20260909";
+  window.__XIANGCAI_MOBILE_BUILD__ = "self-20260910";
 
   var DEFAULT_API_BASE = "https://agent.unidt.com/v1";
   var DEFAULT_API_KEY = "dataset-adoZr8SvffoDDlAGZibbdAip";
@@ -195,6 +292,9 @@
     "固定资产的折旧年限",
     "费用报销有时限要求吗"
   ];
+  var WELCOME_TEXT = "你好，我是湘财晓助。可以回答财务制度、报销流程等财务相关的知识；也可点「常用 → 上传发票」识别票据并生成填报表单。";
+  var BOT_FACE_SVG =
+    '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="20" r="2.4" fill="#fff"/><circle cx="31" cy="20" r="2.4" fill="#fff"/><path d="M17 29c2.4 3.2 11.6 3.2 14 0" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>';
 
   function normalizeBase(raw) {
     var base = String(raw || "").trim().replace(/\/+$/, "");
@@ -205,181 +305,146 @@
   function readConfig() {
     var params = new URLSearchParams(location.search);
     var fromQuery = params.get("base") || params.get("api");
-    var selectedIds = [];
-    try {
-      var arr = JSON.parse(localStorage.getItem(STORAGE_SELECTED) || "[]");
-      if (Array.isArray(arr)) selectedIds = arr;
-    } catch (e) {}
+    var selected = [];
+    try { selected = JSON.parse(localStorage.getItem(STORAGE_SELECTED) || "[]"); } catch (e) { selected = []; }
     return {
       apiBase: normalizeBase(fromQuery || localStorage.getItem(STORAGE_BASE) || DEFAULT_API_BASE),
       apiKey: localStorage.getItem(STORAGE_KEY) || DEFAULT_API_KEY,
       method: localStorage.getItem(STORAGE_METHOD) || "hybrid_search",
       topK: localStorage.getItem(STORAGE_TOPK) || "3",
       threshold: localStorage.getItem(STORAGE_THRESHOLD) || "0",
-      selectedIds: selectedIds
+      selectedIds: Array.isArray(selected) ? selected : []
     };
   }
 
   function writeConfig(partial) {
-    partial = partial || {};
-    if (partial.apiBase != null) localStorage.setItem(STORAGE_BASE, normalizeBase(partial.apiBase));
-    if (partial.apiKey != null) localStorage.setItem(STORAGE_KEY, String(partial.apiKey).trim() || DEFAULT_API_KEY);
-    if (partial.method != null) localStorage.setItem(STORAGE_METHOD, partial.method);
-    if (partial.topK != null) localStorage.setItem(STORAGE_TOPK, String(partial.topK));
-    if (partial.threshold != null) localStorage.setItem(STORAGE_THRESHOLD, String(partial.threshold));
-    if (partial.selectedIds != null) localStorage.setItem(STORAGE_SELECTED, JSON.stringify(Array.from(partial.selectedIds)));
-    return readConfig();
-  }
-
-  async function kbFetch(path, options) {
-    var cfg = readConfig();
-    var base = normalizeBase(cfg.apiBase);
-    if (!base) throw new Error("请先配置 API Base");
-    var headers = {
-      Authorization: "Bearer " + (cfg.apiKey || DEFAULT_API_KEY),
-      "Content-Type": "application/json"
-    };
-    if (options && options.headers) {
-      for (var k in options.headers) headers[k] = options.headers[k];
-    }
-    var res = await fetch(base + path, {
-      method: (options && options.method) || "GET",
-      headers: headers,
-      body: options && options.body
-    });
-    var text = await res.text();
-    var data = null;
-    try { data = text ? JSON.parse(text) : null; } catch (e) { data = { raw: text }; }
-    if (!res.ok) {
-      var msg = (data && (data.message || data.errorMsg || data.error || data.detail)) || text || res.statusText;
-      throw new Error("HTTP " + res.status + " · " + msg);
-    }
-    return data;
+    var cur = readConfig();
+    var next = Object.assign({}, cur, partial || {});
+    localStorage.setItem(STORAGE_BASE, next.apiBase);
+    localStorage.setItem(STORAGE_KEY, next.apiKey);
+    localStorage.setItem(STORAGE_METHOD, next.method);
+    localStorage.setItem(STORAGE_TOPK, String(next.topK));
+    localStorage.setItem(STORAGE_THRESHOLD, String(next.threshold));
+    localStorage.setItem(STORAGE_SELECTED, JSON.stringify(next.selectedIds || []));
   }
 
   async function listDatasets() {
-    var data = await kbFetch("/knowledge/datasets?page=1&limit=50");
-    return { list: Array.isArray(data && data.data) ? data.data : [], total: data && data.total };
+    var cfg = readConfig();
+    var res = await fetch(cfg.apiBase + "/datasets?page=1&limit=100", {
+      headers: { Authorization: "Bearer " + cfg.apiKey }
+    });
+    if (!res.ok) throw new Error("知识库列表失败 " + res.status);
+    var data = await res.json();
+    var list = (data && (data.data || data)) || [];
+    if (!Array.isArray(list)) list = [];
+    return { list: list, total: data && data.total };
   }
 
-  async function retrieve(query, selectedIds) {
+  async function retrieve(query) {
     var cfg = readConfig();
-    var ids = selectedIds && selectedIds.length ? selectedIds : cfg.selectedIds;
-    if (!ids.length) throw new Error("请至少选择一个知识库（可在 PC 端配置页勾选）");
-    var method = cfg.method || "hybrid_search";
-    var topK = Math.max(1, parseInt(cfg.topK, 10) || 3);
-    var scoreThreshold = Number(cfg.threshold);
-    var threshold = Number.isFinite(scoreThreshold) ? scoreThreshold : 0;
-    if (ids.length === 1) {
-      var data = await kbFetch("/knowledge/datasets/" + encodeURIComponent(ids[0]) + "/retrieval", {
+    var ids = cfg.selectedIds || [];
+    if (!ids.length) return [];
+    var all = [];
+    for (var i = 0; i < ids.length; i++) {
+      var res = await fetch(cfg.apiBase + "/datasets/" + ids[i] + "/" + cfg.method, {
         method: "POST",
-        body: JSON.stringify({ query: query, retrieval_method: method, top_k: topK, score_threshold: threshold })
+        headers: {
+          Authorization: "Bearer " + cfg.apiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          query: query,
+          top_k: Number(cfg.topK) || 3,
+          score_threshold: Number(cfg.threshold) || 0
+        })
       });
-      return Array.isArray(data && data.result) ? data.result : [];
+      if (!res.ok) continue;
+      var data = await res.json();
+      var records = (data && (data.records || data.data || data)) || [];
+      if (Array.isArray(records)) all = all.concat(records);
     }
-    var qs = new URLSearchParams();
-    ids.forEach(function (id) { qs.append("dataset_ids", id); });
-    qs.set("query", query);
-    qs.set("retrieval_method", method);
-    qs.set("top_k", String(topK));
-    qs.set("score_threshold", String(threshold));
-    var data2 = await kbFetch("/knowledge/datasets/retrieval?" + qs.toString(), { method: "GET" });
-    return Array.isArray(data2 && data2.result) ? data2.result : [];
+    return all;
   }
 
   function buildContext(results) {
-    if (!results || !results.length) return "（未检索到相关片段）";
-    return results.slice(0, 5).map(function (r, i) {
-      var title = r.title || (r.metadata && r.metadata.document_name) || ("片段 " + (i + 1));
-      var body = String(r.content || "").replace(/\s+/g, " ").trim();
-      return "[" + (i + 1) + "] " + title + "\n" + (body.length > 1200 ? body.slice(0, 1200) + "…" : body);
+    return (results || []).map(function (r, idx) {
+      var content = (r && (r.content || r.segment && r.segment.content)) || JSON.stringify(r);
+      return "[" + (idx + 1) + "] " + String(content).slice(0, 1200);
     }).join("\n\n");
   }
 
+  function polishAnswer(text) {
+    return String(text || "")
+      .replace(/\*\*/g, "")
+      .replace(/^#+\s*/gm, "")
+      .replace(/依据[：:].+/g, "")
+      .replace(/附录\s*\d+[^\n]*/g, "")
+      .trim();
+  }
+
   async function streamLLM(messages, onDelta, signal) {
-    var response = await fetch(LLM_API_URL, {
+    var res = await fetch(LLM_API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + LLM_API_KEY },
+      headers: {
+        Authorization: "Bearer " + LLM_API_KEY,
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ model: LLM_MODEL, messages: messages, stream: true }),
       signal: signal
     });
-    if (!response.ok) {
-      var errText = await response.text();
-      throw new Error("LLM HTTP " + response.status + " · " + errText.slice(0, 240));
-    }
-    var reader = response.body.getReader();
+    if (!res.ok) throw new Error("模型请求失败 " + res.status);
+    var reader = res.body.getReader();
     var decoder = new TextDecoder();
-    var buffer = "";
     var full = "";
+    var buf = "";
     while (true) {
       var chunk = await reader.read();
       if (chunk.done) break;
-      buffer += decoder.decode(chunk.value, { stream: true });
-      var lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (var i = 0; i < lines.length; i++) {
-        var trimmed = lines[i].trim();
-        if (!trimmed || trimmed.indexOf("data:") !== 0) continue;
-        var payload = trimmed.slice(5).trim();
-        if (payload === "[DONE]") continue;
+      buf += decoder.decode(chunk.value, { stream: true });
+      var parts = buf.split("\n");
+      buf = parts.pop() || "";
+      for (var i = 0; i < parts.length; i++) {
+        var line = parts[i].trim();
+        if (line.indexOf("data:") !== 0) continue;
+        var payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
         try {
-          var parsed = JSON.parse(payload);
-          var delta = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content;
+          var json = JSON.parse(payload);
+          var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
           if (delta) {
             full += delta;
-            onDelta(full, delta);
+            if (onDelta) onDelta(polishAnswer(full));
           }
         } catch (e) {}
       }
     }
-    return full;
+    return polishAnswer(full);
   }
 
-  function sourceTitle(s) {
-    return s.title || (s.metadata && s.metadata.document_name) || "文档";
+  function sourceTitle(item, idx) {
+    return (item && (item.document_name || item.title || item.segment && item.segment.document_name)) || ("来源 " + (idx + 1));
   }
 
-  function sourceScore(s) {
-    var score = s.metadata && (s.metadata.rerank_score != null ? s.metadata.rerank_score : s.metadata.score);
-    return score != null ? Number(score) : null;
-  }
-
-  function renderCollapsedSources(container, sources) {
+  function renderCollapsedSources(col, sources) {
     if (!sources || !sources.length) return;
     var block = document.createElement("div");
     block.className = "src-block";
     var toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "src-toggle";
-    toggle.setAttribute("aria-expanded", "false");
-    var label = document.createElement("span");
-    label.className = "src-toggle-label";
-    label.textContent = "相关材料 · " + sources.length + " 份";
-    var chevron = document.createElement("span");
-    chevron.className = "src-chevron";
-    chevron.textContent = "▾";
-    toggle.appendChild(label);
-    toggle.appendChild(chevron);
+    toggle.textContent = "参考来源 · " + sources.length;
     var panel = document.createElement("div");
     panel.className = "src-panel is-collapsed";
     panel.hidden = true;
-    sources.forEach(function (s) {
+    sources.forEach(function (s, idx) {
       var item = document.createElement("div");
       item.className = "src-item";
-      var score = sourceScore(s);
       var meta = document.createElement("div");
       meta.className = "src-meta";
-      var clip = document.createElement("span");
-      clip.textContent = "📎";
-      var nameEl = document.createElement("span");
-      nameEl.className = "src-name";
-      nameEl.textContent = sourceTitle(s) + (score != null ? " · " + score.toFixed(3) : "");
-      meta.appendChild(clip);
-      meta.appendChild(nameEl);
+      meta.textContent = sourceTitle(s, idx);
       var body = document.createElement("div");
       body.className = "src-body";
-      var snippet = String(s.content || "").replace(/\s+/g, " ").trim();
-      body.textContent = snippet.length > 280 ? snippet.slice(0, 280) + "…" : snippet;
+      body.textContent = String((s && (s.content || s.segment && s.segment.content)) || "").slice(0, 400);
       item.appendChild(meta);
       item.appendChild(body);
       panel.appendChild(item);
@@ -387,27 +452,26 @@
     toggle.addEventListener("click", function () {
       var open = panel.hidden;
       panel.hidden = !open;
-      if (open) panel.classList.remove("is-collapsed");
-      else panel.classList.add("is-collapsed");
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      chevron.textContent = open ? "▴" : "▾";
+      panel.classList.toggle("is-collapsed", !open);
     });
     block.appendChild(toggle);
     block.appendChild(panel);
-    container.appendChild(block);
+    col.appendChild(block);
   }
 
-  // 页面 UI
   var chat = document.getElementById("chat");
   var form = document.getElementById("form");
   var input = document.getElementById("input");
   var send = document.getElementById("send");
   var chips = document.getElementById("chips");
   var hint = document.getElementById("hint");
+  var btnNewChat = document.getElementById("btnNewChat");
   var busy = false;
   var abort = null;
 
   function addUser(text) {
+    var welcome = chat.querySelector(".welcome-card");
+    if (welcome) welcome.remove();
     var wrap = document.createElement("div");
     wrap.className = "msg user";
     var bubble = document.createElement("div");
@@ -423,7 +487,7 @@
     wrap.className = "msg bot";
     var avatar = document.createElement("div");
     avatar.className = "avatar";
-    avatar.textContent = "湘";
+    avatar.innerHTML = BOT_FACE_SVG;
     var col = document.createElement("div");
     col.className = "col";
     var bubble = document.createElement("div");
@@ -454,20 +518,11 @@
 
   function renderChips() {
     chips.innerHTML = "";
-    var neu = document.createElement("button");
-    neu.type = "button";
-    neu.className = "chip primary";
-    neu.textContent = "+ 新对话";
-    neu.addEventListener("click", function () {
-      chat.innerHTML = "";
-      bootWelcome();
-    });
-    chips.appendChild(neu);
     SUGGESTIONS.forEach(function (q) {
       var b = document.createElement("button");
       b.type = "button";
       b.className = "chip";
-      b.textContent = q.length > 10 ? q.slice(0, 10) + "…" : q;
+      b.textContent = q.length > 12 ? q.slice(0, 12) + "…" : q;
       b.title = q;
       b.addEventListener("click", function () { ask(q); });
       chips.appendChild(b);
@@ -522,7 +577,7 @@
       else bot.body.textContent = answer;
       var fb = document.createElement("div");
       fb.className = "feedback";
-      fb.innerHTML = "<span>👍</span><span>👎</span>";
+      fb.innerHTML = "<span aria-hidden='true'>↑</span><span aria-hidden='true'>↓</span>";
       bot.bubble.appendChild(fb);
       renderCollapsedSources(bot.col, sources);
       chat.scrollTop = chat.scrollHeight;
@@ -539,14 +594,28 @@
   }
 
   function bootWelcome() {
-    var bot = addBotShell();
-    bot.body.textContent =
-      "你好，我是湘财晓助。可以回答财务制度、报销流程等财务相关的知识；也可点「常用 → 上传发票」识别票据并生成填报表单。";
+    chat.innerHTML = "";
+    var card = document.createElement("div");
+    card.className = "welcome-card";
+    card.innerHTML =
+      '<div class="welcome-main">' +
+        '<div class="welcome-copy">' +
+          '<div class="welcome-hello">Hello～</div>' +
+          '<p class="welcome-desc"></p>' +
+        "</div>" +
+        '<div class="welcome-avatar" aria-hidden="true"><div class="welcome-avatar-face">' + BOT_FACE_SVG + "</div></div>" +
+      "</div>";
+    card.querySelector(".welcome-desc").textContent = WELCOME_TEXT;
+    chat.appendChild(card);
   }
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     ask(input.value);
+  });
+  btnNewChat.addEventListener("click", function () {
+    if (busy) return;
+    bootWelcome();
   });
   window.addEventListener("storage", function (e) {
     if (!e.key || String(e.key).indexOf("caizhi_") !== 0) return;

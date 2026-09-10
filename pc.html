@@ -6,45 +6,73 @@
   <title>湘财晓助 | 财务智能办公助手</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --blue: #4f6ef7;
-      --blue-deep: #3b57e0;
-      --ink: #1f2937;
-      --muted: #6b7280;
-      --line: #e5e7eb;
-      --bg: #f3f5f9;
+      --bg-page: #FFFFFF;
+      --ai-card: #F2F4FB;
+      --brand: #0047EA;
+      --brand-soft: #EBF1FE;
+      --icon-bg: #DEE6FF;
+      --icon-blue: #2A67F4;
+      --title: #001036;
+      --text: #23272E;
+      --ai-desc: #596793;
+      --text-2: #535F6E;
+      --hint: #8C97A6;
+      --placeholder: #AFB6CC;
+      --border: #E7E8ED;
+      --card-border: #D3D9E9;
+      --split: #E3E9F8;
+      --disabled: #B9CAF1;
+      --orange: #F09000;
+      --orange-border: #FCE9CC;
+      --label: #455586;
+      --common: #303E5D;
+      --blue: #0047EA;
+      --blue-deep: #0047EA;
+      --ink: #23272E;
+      --muted: #8C97A6;
+      --line: #E7E8ED;
+      --bg: #FFFFFF;
       --card: #fff;
-      --navy: #243447;
-      --peach: #f8ebe4;
-      --shadow: 0 10px 28px rgba(31, 41, 55, 0.06);
+      --float-shadow: 0 2px 19px rgba(82, 92, 127, 0.29);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: "Noto Sans SC", sans-serif;
-      color: var(--ink);
-      background: var(--bg);
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+      color: var(--text);
+      background: var(--bg-page);
       min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 400;
+    }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid rgba(0, 71, 234, 0.35);
+      outline-offset: 2px;
     }
     .page {
-      width: min(1180px, 100%);
+      width: min(1200px, 100%);
       margin: 0 auto;
-      padding: 1.35rem 1.25rem 2rem;
+      padding: 20px 16px 24px;
     }
     .hero h1 {
-      font-size: clamp(1.45rem, 2.4vw, 1.85rem);
-      font-weight: 700;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--title);
       letter-spacing: 0.01em;
     }
+    .mobile-link {
+      display: inline-block; margin-top: 8px; font-size: 13px; color: var(--icon-blue); text-decoration: none;
+    }
     .layout {
-      margin-top: 1.15rem;
+      margin-top: 16px;
       display: grid;
-      grid-template-columns: 1fr 280px;
-      gap: 1rem;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 16px;
       align-items: stretch;
-      height: calc(100vh - 110px);
-      min-height: 520px;
+      height: calc(100vh - 100px);
+      min-height: 560px;
     }
     .chat-stage {
       height: 100%;
@@ -52,299 +80,471 @@
       min-height: 0;
       display: flex;
       flex-direction: column;
-      border: 2px dashed #93c5fd;
-      border-radius: 18px;
-      background: linear-gradient(180deg, #f8fbff 0%, #f1f5f9 100%);
-      padding: 0.55rem;
+      align-items: center;
+      background: var(--bg-page);
+      border-radius: 20px;
       box-sizing: border-box;
     }
-    .chat-stage-label {
-      flex-shrink: 0;
-      align-self: flex-start;
-      margin: 0 0 0.45rem 0.15rem;
-      padding: 0.18rem 0.55rem;
-      border-radius: 999px;
-      background: #dbeafe;
-      color: #1d4ed8;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-    .chat-card, .cfg-drawer {
-      background: var(--card);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(229, 231, 235, 0.9);
-    }
     .chat-card {
+      width: min(800px, 100%);
       flex: 1;
       min-height: 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      position: relative;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
     }
-    .chat-head {
-      padding: 0.9rem 1.1rem;
-      border-bottom: 1px solid var(--line);
+    .chat-workspace {
+      flex: 1;
+      min-height: 0;
       display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      font-weight: 600;
+      flex-direction: column;
+      position: relative;
+    }
+    .chat-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--bg-page);
     }
     .chat {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
       overscroll-behavior: contain;
-      padding: 1.1rem;
+      padding: 16px 16px 12px;
       display: flex;
       flex-direction: column;
-      gap: 0.95rem;
-      background: #fcfcfd;
+      gap: 16px;
+      background: var(--bg-page);
     }
-    .msg { max-width: 86%; display: flex; gap: 0.55rem; animation: rise 0.3s ease both; }
+    .welcome-card {
+      width: min(420px, 100%);
+      align-self: flex-start;
+      background: var(--ai-card);
+      border-radius: 20px;
+      padding: 12px 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: rise 0.3s ease both;
+    }
+    .welcome-main {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .welcome-copy { flex: 1; min-width: 0; }
+    .welcome-hello {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--title);
+      margin-bottom: 8px;
+    }
+    .welcome-desc {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ai-desc);
+      line-height: 1.6;
+    }
+    .welcome-avatar {
+      width: 88px;
+      height: 88px;
+      flex-shrink: 0;
+      border-radius: 15px;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+    .welcome-avatar::before {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: 20px;
+      background: radial-gradient(circle at 40% 35%, rgba(122, 92, 255, 0.28), transparent 62%),
+                  radial-gradient(circle at 70% 70%, rgba(255, 186, 170, 0.35), transparent 60%);
+      filter: blur(8px);
+      z-index: 0;
+    }
+    .welcome-avatar-face {
+      position: relative;
+      z-index: 1;
+      width: 72px;
+      height: 72px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #7b8cff 0%, #a78bfa 42%, #ffd6c9 100%);
+      display: grid;
+      place-items: center;
+    }
+    .welcome-avatar-face svg { width: 40px; height: 40px; display: block; }
+    .history-mask[hidden] { display: none !important; }
+    .msg { max-width: 86%; display: flex; gap: 10px; animation: rise 0.3s ease both; }
     .msg.user { align-self: flex-end; flex-direction: row-reverse; }
     .msg .ava {
-      width: 2rem; height: 2rem; border-radius: 50%;
-      background: var(--blue); color: #fff; display: flex;
-      align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 14px;
+      flex-shrink: 0; overflow: hidden;
+      display: grid; place-items: center;
+      background: linear-gradient(145deg, #7b8cff 0%, #a78bfa 45%, #ffd6c9 100%);
+      color: #fff; font-size: 12px; font-weight: 600;
     }
-    .msg.user .ava { background: #94a3b8; }
+    .msg.user .ava {
+      background: var(--icon-bg);
+      color: var(--icon-blue);
+      border-radius: 999px;
+    }
+    .msg .ava svg { width: 22px; height: 22px; display: block; }
     .bubble {
-      background: #f3f4f6;
-      border-radius: 12px;
-      padding: 0.8rem 0.95rem;
-      line-height: 1.65;
-      font-size: 0.92rem;
+      background: var(--ai-card);
+      border-radius: 16px;
+      padding: 12px 16px;
+      line-height: 1.6;
+      font-size: 15px;
+      color: var(--text);
       white-space: pre-wrap;
       word-break: break-word;
     }
-    .msg.user .bubble { background: #e8eeff; }
-    .src-block { margin-top: 0.5rem; }
-    .src-toggle {
-      appearance: none; border: 1px solid var(--line); background: #fff;
-      border-radius: 8px; padding: 0.35rem 0.65rem; cursor: pointer;
-      font: inherit; font-size: 0.78rem; color: var(--muted);
-      display: inline-flex; align-items: center; gap: 0.35rem;
+    .msg.user .bubble {
+      background: var(--brand-soft);
+      color: var(--text);
+      border-radius: 16px 16px 4px 16px;
     }
-    .src-panel { margin-top: 0.45rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .src-block { margin-top: 8px; }
+    .src-toggle {
+      appearance: none; border: 1px solid var(--card-border); background: #fff;
+      border-radius: 8px; padding: 6px 10px; cursor: pointer;
+      font: inherit; font-size: 13px; color: var(--ai-desc);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .src-toggle:hover { border-color: #C4D5FD; color: var(--brand); }
+    .src-panel { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
     .src-panel[hidden], .src-panel.is-collapsed { display: none !important; }
     .src-item {
-      background: #fff; border: 1px solid var(--line); border-radius: 10px;
-      padding: 0.55rem 0.7rem;
+      background: #fff; border: 1px solid var(--card-border); border-radius: 12px;
+      padding: 10px 12px;
     }
-    .src-meta { font-size: 0.8rem; color: var(--blue-deep); font-weight: 500; margin-bottom: 0.25rem; }
-    .src-body { font-size: 0.78rem; color: var(--muted); line-height: 1.45; white-space: pre-wrap; }
+    .src-meta { font-size: 13px; color: var(--icon-blue); font-weight: 500; margin-bottom: 4px; }
+    .src-body { font-size: 13px; color: var(--text-2); line-height: 1.45; white-space: pre-wrap; }
     .composer-box {
       flex-shrink: 0;
-      border-top: 1px solid var(--line);
+      width: 100%;
       background: #fff;
+      border: 1px solid var(--border);
+      border-bottom: 0;
+      border-radius: 36px 36px 0 0;
+      padding: 16px 16px 24px;
     }
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 12px;
+      width: min(390px, 100%);
+    }
+    .history-icon-btn {
+      appearance: none;
+      width: 38px; height: 38px; min-width: 38px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--brand-soft);
+      color: var(--icon-blue);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .history-icon-btn:hover { background: var(--icon-bg); }
+    .history-icon-btn[aria-expanded="true"] { background: var(--icon-bg); }
+    .history-icon-btn svg { width: 18px; height: 18px; }
+    .new-chat-btn {
+      appearance: none;
+      height: 34px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 18px;
+      background: var(--brand);
+      color: #fff;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .new-chat-btn:hover { filter: brightness(1.05); }
+    .new-chat-btn:active { transform: scale(0.98); }
     .quick-q {
-      display: flex; flex-wrap: wrap; gap: 0.4rem;
-      padding: 0;
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-bottom: 12px;
     }
     .quick-q button {
-      appearance: none; border: 1px solid #c7d2fe; background: #f8fafc;
-      border-radius: 999px; padding: 0.35rem 0.7rem; cursor: pointer;
-      font: inherit; font-size: 0.75rem; color: var(--ink); text-align: left;
+      appearance: none;
+      border: 1px solid var(--card-border);
+      background: #fff;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      color: var(--ai-desc);
+      text-align: left;
       max-width: 100%;
     }
-    .quick-q button:hover { background: #eef2ff; border-color: #a5b4fc; }
+    .quick-q button:hover {
+      border-color: #C4D5FD;
+      color: var(--brand);
+      background: var(--brand-soft);
+    }
     .img-previews {
-      display: flex; flex-wrap: wrap; gap: 0.5rem;
-      padding: 0.75rem 1rem 0;
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-bottom: 12px;
     }
     .img-previews[hidden] { display: none !important; }
     .img-thumb {
-      position: relative; width: 72px; height: 72px; border-radius: 10px;
-      overflow: hidden; border: 1px solid var(--line); background: #f8fafc;
+      position: relative; width: 72px; height: 72px; border-radius: 12px;
+      overflow: hidden; border: 1px solid var(--card-border); background: var(--ai-card);
     }
     .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .img-thumb button {
-      position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
-      border: 0; border-radius: 50%; background: rgba(15,23,42,0.65); color: #fff;
+      position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+      border: 0; border-radius: 50%; background: rgba(35,39,46,0.65); color: #fff;
       font-size: 12px; line-height: 1; cursor: pointer; padding: 0;
     }
     .composer {
-      padding: 0.85rem 1rem;
-      display: flex; gap: 0.55rem; align-items: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
     .composer input[type="text"] {
-      flex: 1; border: 1px solid var(--line); border-radius: 999px;
-      padding: 0.75rem 1rem; font: inherit; outline: none;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      font: inherit;
+      font-size: 18px;
+      color: var(--text);
+      outline: none;
     }
-    .composer input[type="text"]:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(79,110,247,0.12); }
-    .composer button {
-      appearance: none; border: 0; background: var(--blue); color: #fff;
-      border-radius: 10px; padding: 0.7rem 1.1rem; font: inherit; font-weight: 500;
+    .composer input[type="text"]::placeholder { color: var(--placeholder); }
+    .composer-tools {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .composer .common-menu { position: relative; flex-shrink: 0; }
+    .composer button.common-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--common);
+      font: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 8px 4px;
+      min-height: 44px;
       cursor: pointer;
+      white-space: nowrap;
     }
-    .composer .common-menu {
-      position: relative; flex-shrink: 0;
-    }
-    .composer button.common-btn,
-    .composer button.upload-btn {
-      background: #eef2ff; color: var(--blue-deep); border: 1px solid #c7d2fe;
-      padding: 0.7rem 0.9rem; white-space: nowrap;
-    }
+    .composer button.common-btn:hover { color: var(--brand); }
     .composer .common-panel {
       position: absolute; left: 0; bottom: calc(100% + 6px);
-      min-width: 128px; padding: 0.35rem;
-      background: #fff; border: 1px solid var(--line); border-radius: 10px;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
-      display: none; z-index: 5;
+      min-width: 140px; padding: 6px;
+      background: #fff; border: 1px solid var(--card-border); border-radius: 12px;
+      display: none; z-index: 6;
     }
     .composer .common-menu.open .common-panel { display: block; }
-    .composer .common-panel button {
-      width: 100%; background: #fff; color: var(--ink); border: 0;
-      border-radius: 8px; padding: 0.55rem 0.7rem; text-align: left;
+    .composer .common-panel button.upload-btn {
+      width: 100%;
+      appearance: none;
+      background: #fff;
+      color: var(--text);
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: left;
+      font: inherit;
+      font-size: 14px;
       font-weight: 500;
+      cursor: pointer;
     }
-    .composer .common-panel button:hover { background: #eef2ff; color: var(--blue-deep); }
-    .composer button:disabled { opacity: 0.55; cursor: not-allowed; }
-    .user-imgs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; }
+    .composer .common-panel button.upload-btn:hover {
+      background: var(--brand-soft);
+      color: var(--brand);
+    }
+    .composer button.send-btn {
+      appearance: none;
+      width: 48px; height: 48px; min-width: 48px;
+      border: 0; border-radius: 999px;
+      background: var(--brand);
+      color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+    .composer button.send-btn:hover { filter: brightness(1.05); }
+    .composer button.send-btn:disabled {
+      background: var(--disabled);
+      cursor: not-allowed;
+      filter: none;
+    }
+    .composer button.send-btn svg { width: 20px; height: 20px; display: block; }
+    .composer-box:focus-within {
+      box-shadow: inset 0 0 0 1px rgba(0, 71, 234, 0.18);
+    }
+    .user-imgs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .user-imgs img {
       width: 88px; height: 88px; object-fit: cover; border-radius: 8px;
-      border: 1px solid rgba(79,110,247,0.2);
+      border: 1px solid var(--card-border);
     }
-    .ticket-board { margin-top: 0.55rem; display: flex; flex-direction: column; gap: 0.7rem; }
+    .ticket-board { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
     .ticket-card {
-      background: #fff; border: 1px solid var(--line); border-radius: 12px;
-      padding: 0.75rem 0.85rem;
+      background: #fff; border: 1px solid var(--card-border); border-radius: 12px;
+      padding: 8px;
     }
     .ticket-card h4 {
-      font-size: 0.85rem; font-weight: 600; margin-bottom: 0.55rem;
-      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
     }
     .ticket-card h4 img {
-      width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line);
+      width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--card-border);
     }
     .ticket-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem 0.65rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px;
     }
     .ticket-grid label {
-      display: flex; flex-direction: column; gap: 0.2rem;
-      font-size: 0.72rem; color: var(--muted);
+      display: flex; flex-direction: column; gap: 4px;
+      font-size: 13px; color: var(--text-2);
     }
     .ticket-grid label.full { grid-column: 1 / -1; }
     .ticket-grid input, .ticket-grid select {
-      border: 1px solid var(--line); border-radius: 8px;
-      padding: 0.4rem 0.5rem; font: inherit; font-size: 0.82rem; color: var(--ink);
-      background: #f8fafc;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font: inherit; font-size: 14px; color: var(--text);
+      background: #fff;
     }
-    .ticket-actions { margin-top: 0.55rem; display: flex; gap: 0.4rem; }
+    .ticket-actions { margin-top: 10px; display: flex; gap: 8px; }
     .ticket-actions button {
-      appearance: none; border: 1px solid var(--line); background: #fff;
-      border-radius: 8px; padding: 0.35rem 0.7rem; font: inherit; font-size: 0.75rem;
-      cursor: pointer;
+      appearance: none; border: 1px solid var(--card-border); background: #fff;
+      border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 13px;
+      cursor: pointer; color: var(--text-2);
     }
-    .ticket-actions button.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
-    .side { display: flex; flex-direction: column; gap: 0.85rem; min-height: 0; max-height: 100%; overflow-y: auto; }
+    .ticket-actions button.primary {
+      background: var(--brand); color: #fff; border-color: var(--brand);
+      border-radius: 999px; min-height: 36px; padding: 8px 16px;
+    }
+    .ticket-actions button.primary:disabled { background: var(--disabled); border-color: var(--disabled); }
+    .side { display: flex; flex-direction: column; gap: 12px; min-height: 0; max-height: 100%; overflow-y: auto; }
     .cfg-drawer {
-      padding: 0.75rem 0.85rem;
-      opacity: 0.88;
+      background: #fff;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      opacity: 0.92;
     }
     .cfg-drawer summary {
-      cursor: pointer; font-size: 0.78rem; color: var(--muted);
+      cursor: pointer; font-size: 13px; color: var(--hint);
       list-style: none; display: flex; align-items: center; justify-content: space-between;
     }
     .cfg-drawer summary::-webkit-details-marker { display: none; }
-    .cfg-body { margin-top: 0.65rem; display: flex; flex-direction: column; gap: 0.45rem; }
-    .field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.2rem; }
+    .cfg-body { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .field label { display: block; font-size: 13px; color: var(--hint); margin-bottom: 4px; }
     .field input, .field select {
-      width: 100%; border: 1px solid var(--line); border-radius: 8px;
-      padding: 0.4rem 0.5rem; font: inherit; font-size: 0.8rem;
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font: inherit; font-size: 13px;
     }
-    .cfg-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .cfg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .cfg-actions button {
-      appearance: none; border: 1px solid var(--line); background: #fff;
-      border-radius: 8px; padding: 0.35rem 0.55rem; font: inherit; font-size: 0.75rem;
+      appearance: none; border: 1px solid var(--card-border); background: #fff;
+      border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px;
       cursor: pointer;
     }
-    .cfg-actions button.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
-    .dataset-list { max-height: 160px; overflow: auto; display: flex; flex-direction: column; gap: 0.3rem; }
+    .cfg-actions button.primary { background: var(--brand); color: #fff; border-color: var(--brand); border-radius: 999px; }
+    .dataset-list { max-height: 160px; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
     .dataset-item {
-      text-align: left; border: 1px solid var(--line); background: #fafafa;
-      border-radius: 8px; padding: 0.4rem 0.5rem; cursor: pointer; font-size: 0.75rem;
+      text-align: left; border: 1px solid var(--card-border); background: #fff;
+      border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 13px;
     }
-    .dataset-item.active { border-color: var(--blue); background: #eef2ff; }
-    .dataset-item strong { display: block; font-size: 0.78rem; }
-    .status { font-size: 0.72rem; color: var(--muted); min-height: 1em; }
+    .dataset-item.active { border-color: #C4D5FD; background: var(--brand-soft); color: var(--brand); }
+    .dataset-item strong { display: block; font-size: 13px; }
+    .status { font-size: 13px; color: var(--hint); min-height: 1em; }
     .status.ok { color: #059669; }
     .status.err { color: #dc2626; }
-    .typing { display: flex; gap: 0.25rem; padding: 0.65rem 0.8rem; background: #f3f4f6; border-radius: 12px; align-self: flex-start; }
-    .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); animation: blink 1.1s infinite; display: block; }
+    .typing {
+      display: flex; gap: 6px; padding: 12px 16px;
+      background: var(--ai-card); border-radius: 16px; align-self: flex-start;
+    }
+    .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--icon-blue); animation: blink 1.1s infinite; display: block; }
     .typing i:nth-child(2) { animation-delay: 0.15s; }
     .typing i:nth-child(3) { animation-delay: 0.3s; }
-    .mobile-link {
-      display: inline-block; margin-top: 0.55rem; font-size: 0.8rem; color: var(--blue-deep); text-decoration: none;
-    }
     @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     @keyframes blink {
       0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; transform: translateY(-2px); }
     }
 
-    .chat-body {
+    .history-mask {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.46);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 8;
+    }
+    .chat-card.history-open .history-mask {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .history-rail {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: min(322px, 82%);
+      background: #fff;
+      z-index: 9;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(-105%);
+      transition: transform 0.22s ease;
+      border-right: 1px solid var(--border);
+    }
+    .chat-card.history-open .history-rail { transform: translateX(0); }
+    .history-panel {
       flex: 1;
       min-height: 0;
       display: flex;
-      align-items: stretch;
-      background: #fcfcfd;
-    }
-    .history-rail {
-      flex-shrink: 0;
-      display: flex;
-      align-items: stretch;
-      border-right: 1px solid var(--line);
+      flex-direction: column;
       background: #fff;
     }
-    .history-toggle {
-      appearance: none; border: 0; background: #f8fafc; color: var(--muted);
-      width: 34px; cursor: pointer; font: inherit; font-size: 0.72rem;
-      writing-mode: vertical-rl; letter-spacing: 0.12em; padding: 0.6rem 0;
-    }
-    .history-toggle:hover { background: #eef2ff; color: var(--blue-deep); }
-    .history-rail.open .history-toggle { background: #eef2ff; color: var(--blue-deep); }
-    .history-panel {
-      width: 0; overflow: hidden; transition: width 0.2s ease;
-      display: flex; flex-direction: column; background: #fff;
-    }
-    .history-rail.open .history-panel { width: 210px; border-left: 1px solid var(--line); }
-    .history-rail:not(.open) .history-panel { width: 0; padding: 0; border: 0; }
     .history-head {
-      flex-shrink: 0; padding: 0.65rem 0.75rem; font-size: 0.78rem; font-weight: 600;
-      border-bottom: 1px solid var(--line); color: var(--ink); white-space: nowrap;
+      flex-shrink: 0;
+      padding: 16px 16px 8px;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--placeholder);
     }
     .history-list {
-      flex: 1; min-height: 0; overflow-y: auto; padding: 0.45rem;
-      display: flex; flex-direction: column; gap: 0.35rem;
+      flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px 16px;
+      display: flex; flex-direction: column; gap: 0;
     }
     .history-item {
-      appearance: none; border: 1px solid var(--line); background: #f8fafc;
-      border-radius: 8px; padding: 0.45rem 0.55rem; text-align: left; cursor: pointer;
-      font: inherit; font-size: 0.72rem; color: var(--ink); width: 100%;
+      appearance: none; border: 0; background: transparent;
+      border-radius: 8px; padding: 8px 10px; text-align: left; cursor: pointer;
+      font: inherit; font-size: 14px; color: var(--text); width: 100%;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .history-item:hover { background: #eef2ff; border-color: #c7d2fe; }
-    .history-item .meta { display: block; color: var(--muted); font-size: 0.66rem; margin-top: 0.15rem; }
-    .history-empty { font-size: 0.72rem; color: var(--muted); padding: 0.5rem; white-space: nowrap; }
-    .chat-body .chat { flex: 1; border: 0; }
-    .quick-bar {
-      display: flex; align-items: flex-start; gap: 0.45rem;
-      padding: 0.75rem 1rem 0;
-    }
-    .new-chat-btn {
-      appearance: none; flex-shrink: 0; border: 1px solid #c7d2fe; background: #eef2ff;
-      color: var(--blue-deep); border-radius: 999px; padding: 0.35rem 0.75rem;
-      font: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap;
-    }
-    .new-chat-btn:hover { background: #e0e7ff; }
-    .quick-bar .quick-q { padding: 0; flex: 1; }
+    .history-item:hover { background: var(--ai-card); }
+    .history-item .meta { display: block; color: var(--hint); font-size: 13px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-empty { font-size: 14px; color: var(--placeholder); padding: 8px 10px; }
 
     @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
-      .chat-stage { height: min(70vh, 720px); max-height: min(70vh, 720px); }
-      .chat-card { height: auto; max-height: none; }
+      .chat-stage { height: min(78vh, 760px); max-height: min(78vh, 760px); }
+      .chat-card { height: auto; max-height: none; width: 100%; }
+      .welcome-card { width: 100%; }
+      .page { padding: 16px; }
     }
   </style>
 </head>
@@ -352,50 +552,55 @@
   <div class="page">
     <div class="hero">
       <h1>湘财晓助 | 财务智能办公助手</h1>
-      <a class="mobile-link" href="mobile.html?v=self-20260909">打开移动端页面 →</a>
+      <a class="mobile-link" href="mobile.html?v=self-20260910">打开移动端页面 →</a>
     </div>
 
     <div class="layout">
       <div class="chat-stage">
-        <div class="chat-stage-label">展示区域</div>
-        <section class="chat-card">
-          <div class="chat-head">
-            <span>🤖 湘财晓助</span>
-          </div>
-          <div class="chat-body">
-            <aside class="history-rail" id="historyRail">
-              <button type="button" class="history-toggle" id="btnHistory" title="历史对话" aria-expanded="false">历史对话</button>
-              <div class="history-panel" id="historyPanel">
-                <div class="history-head">历史对话</div>
-                <div class="history-list" id="historyList"></div>
-              </div>
-            </aside>
-            <div class="chat" id="chat" role="log" aria-live="polite"></div>
-          </div>
-          <div class="composer-box">
-            <div class="quick-bar">
-              <button type="button" class="new-chat-btn" id="btnNewChat" title="开始新对话">+ 新对话</button>
-              <div class="quick-q" id="quickQ"></div>
-            </div>
-            <div class="img-previews" id="imgPreviews" hidden></div>
-            <form class="composer" id="form" autocomplete="off">
-              <div class="common-menu" id="commonMenu">
-                <button type="button" class="common-btn" id="btnCommon" title="常用功能">常用</button>
-                <div class="common-panel" id="commonPanel">
-                  <button type="button" class="upload-btn" id="btnUpload" title="上传发票图片">上传发票</button>
+        <section class="chat-card" id="chatCard">
+          <div class="chat-workspace">
+            <div class="chat-body">
+              <div class="history-mask" id="historyMask" hidden></div>
+              <aside class="history-rail" id="historyRail" aria-hidden="true">
+                <div class="history-panel" id="historyPanel">
+                  <div class="history-head">30天内的对话历史在这里</div>
+                  <div class="history-list" id="historyList"></div>
                 </div>
+              </aside>
+              <div class="chat" id="chat" role="log" aria-live="polite"></div>
+            </div>
+            <div class="composer-box">
+              <div class="action-bar">
+                <button type="button" class="history-icon-btn" id="btnHistory" title="历史对话" aria-label="打开历史对话" aria-expanded="false">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" stroke-width="1.6"/></svg>
+                </button>
+                <button type="button" class="new-chat-btn" id="btnNewChat" title="开始新对话" aria-label="新对话">新对话</button>
               </div>
-              <input id="fileImages" type="file" accept="image/*" multiple hidden />
-              <input id="input" type="text" maxlength="800" placeholder="请输入问题，或通过「常用」上传发票识别…" aria-label="问题输入" />
-              <button type="submit" id="send">发送</button>
-            </form>
+              <div class="quick-q" id="quickQ"></div>
+              <div class="img-previews" id="imgPreviews" hidden></div>
+              <form class="composer" id="form" autocomplete="off">
+                <input id="input" type="text" maxlength="800" placeholder="有什么可以帮到你的" aria-label="问题输入" />
+                <div class="composer-tools">
+                  <div class="common-menu" id="commonMenu">
+                    <button type="button" class="common-btn" id="btnCommon" title="常用功能" aria-label="常用功能" aria-haspopup="true" aria-expanded="false">常用 ›</button>
+                    <div class="common-panel" id="commonPanel" role="menu">
+                      <button type="button" class="upload-btn" id="btnUpload" title="上传发票图片" role="menuitem">上传发票</button>
+                    </div>
+                  </div>
+                  <input id="fileImages" type="file" accept="image/*" multiple hidden />
+                  <button type="submit" class="send-btn" id="send" aria-label="发送">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </section>
       </div>
 
       <aside class="side">
         <details class="cfg-drawer" id="cfgDrawer">
-          <summary>高级 · 服务对接 / 知识库 <span>⚙</span></summary>
+          <summary>高级 · 服务对接 / 知识库 <span aria-hidden="true">⚙</span></summary>
           <div class="cfg-body">
             <div class="field">
               <label>API Base（含 /v1）</label>
@@ -819,6 +1024,7 @@
 
     const el = {
       chat: document.getElementById("chat"),
+      chatCard: document.getElementById("chatCard"),
       form: document.getElementById("form"),
       input: document.getElementById("input"),
       send: document.getElementById("send"),
@@ -840,6 +1046,7 @@
       imgPreviews: document.getElementById("imgPreviews"),
       btnNewChat: document.getElementById("btnNewChat"),
       historyRail: document.getElementById("historyRail"),
+      historyMask: document.getElementById("historyMask"),
       btnHistory: document.getElementById("btnHistory"),
       historyPanel: document.getElementById("historyPanel"),
       historyList: document.getElementById("historyList")
@@ -855,6 +1062,33 @@
     };
     const HISTORY_KEY = "caizhi_chat_history_v1";
     const WELCOME_TEXT = "你好，我是湘财晓助。可以回答财务制度、报销流程等财务相关的知识；也可点「常用 → 上传发票」识别票据并生成填报表单。";
+    const BOT_FACE_SVG =
+      '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="20" r="2.4" fill="#fff"/><circle cx="31" cy="20" r="2.4" fill="#fff"/><path d="M17 29c2.4 3.2 11.6 3.2 14 0" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>';
+
+    function setHistoryOpen(open) {
+      state.historyOpen = !!open;
+      if (el.chatCard) el.chatCard.classList.toggle("history-open", state.historyOpen);
+      if (el.historyRail) el.historyRail.setAttribute("aria-hidden", state.historyOpen ? "false" : "true");
+      if (el.historyMask) el.historyMask.hidden = !state.historyOpen;
+      el.btnHistory.setAttribute("aria-expanded", state.historyOpen ? "true" : "false");
+      el.btnHistory.setAttribute("aria-label", state.historyOpen ? "关闭历史对话" : "打开历史对话");
+      if (state.historyOpen) renderHistoryList();
+    }
+
+    function renderWelcome() {
+      const card = document.createElement("div");
+      card.className = "welcome-card";
+      card.innerHTML =
+        '<div class="welcome-main">' +
+          '<div class="welcome-copy">' +
+            '<div class="welcome-hello">Hello～</div>' +
+            '<p class="welcome-desc"></p>' +
+          "</div>" +
+          '<div class="welcome-avatar" aria-hidden="true"><div class="welcome-avatar-face">' + BOT_FACE_SVG + "</div></div>" +
+        "</div>";
+      card.querySelector(".welcome-desc").textContent = WELCOME_TEXT;
+      el.chat.appendChild(card);
+    }
 
     function setStatus(node, text, kind) {
       node.textContent = text || "";
@@ -932,10 +1166,15 @@
     }
 
     function addMsg(role, text) {
+      if (role === "user") {
+        const welcome = el.chat.querySelector(".welcome-card");
+        if (welcome) welcome.remove();
+      }
       const wrap = document.createElement("div");
       wrap.className = "msg " + role;
+      const avaHtml = role === "user" ? "我" : BOT_FACE_SVG;
       wrap.innerHTML =
-        '<div class="ava">' + (role === "user" ? "我" : "湘") + '</div><div class="stack"><div class="bubble"><div class="body"></div></div></div>';
+        '<div class="ava" aria-hidden="true">' + avaHtml + '</div><div class="stack"><div class="bubble"><div class="body"></div></div></div>';
       wrap.querySelector(".body").textContent = text || "";
       el.chat.appendChild(wrap);
       el.chat.scrollTop = el.chat.scrollHeight;
@@ -1260,7 +1499,8 @@
       el.chat.innerHTML = "";
       state.pendingImages = [];
       renderPendingPreviews();
-      addMsg("bot", WELCOME_TEXT);
+      setHistoryOpen(false);
+      renderWelcome();
       el.input.focus();
     }
 
@@ -1273,14 +1513,12 @@
       (item.messages || []).forEach(function (m) {
         addMsg(m.role === "user" ? "user" : "bot", m.text || "");
       });
+      setHistoryOpen(false);
       el.chat.scrollTop = el.chat.scrollHeight;
     }
 
     function toggleHistory() {
-      state.historyOpen = !state.historyOpen;
-      el.historyRail.classList.toggle("open", state.historyOpen);
-      el.btnHistory.setAttribute("aria-expanded", state.historyOpen ? "true" : "false");
-      if (state.historyOpen) renderHistoryList();
+      setHistoryOpen(!state.historyOpen);
     }
 
     function renderQuickQ() {
@@ -1302,14 +1540,20 @@
     el.btnConnect.addEventListener("click", connect);
     el.btnCommon.addEventListener("click", function (e) {
       e.stopPropagation();
-      el.commonMenu.classList.toggle("open");
+      const open = !el.commonMenu.classList.contains("open");
+      el.commonMenu.classList.toggle("open", open);
+      el.btnCommon.setAttribute("aria-expanded", open ? "true" : "false");
     });
     el.btnUpload.addEventListener("click", function () {
       el.commonMenu.classList.remove("open");
+      el.btnCommon.setAttribute("aria-expanded", "false");
       el.fileImages.click();
     });
     document.addEventListener("click", function (e) {
-      if (!el.commonMenu.contains(e.target)) el.commonMenu.classList.remove("open");
+      if (!el.commonMenu.contains(e.target)) {
+        el.commonMenu.classList.remove("open");
+        el.btnCommon.setAttribute("aria-expanded", "false");
+      }
     });
     el.fileImages.addEventListener("change", function () {
       onFilesSelected(el.fileImages.files).catch(function (err) {
@@ -1329,11 +1573,19 @@
       e.stopPropagation();
       toggleHistory();
     });
+    if (el.historyMask) {
+      el.historyMask.addEventListener("click", function () {
+        setHistoryOpen(false);
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && state.historyOpen) setHistoryOpen(false);
+    });
 
     loadForm();
     renderQuickQ();
     renderHistoryList();
-    addMsg("bot", WELCOME_TEXT);
+    renderWelcome();
     connect();
   
 </script>
