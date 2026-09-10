@@ -27,30 +27,6 @@
       background: var(--bg);
       min-height: 100vh;
     }
-    .top {
-      background: #fff;
-      border-bottom: 1px solid var(--line);
-      padding: 0.65rem 1.4rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.82rem;
-      color: var(--muted);
-    }
-    .top .crumb strong { color: var(--ink); font-weight: 600; }
-    .top-right { display: flex; align-items: center; gap: 0.75rem; }
-    .badge {
-      background: #fde68a; color: #92400e;
-      padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.72rem;
-    }
-    .avatar {
-      display: flex; align-items: center; gap: 0.4rem; color: var(--ink);
-    }
-    .avatar i {
-      width: 1.55rem; height: 1.55rem; border-radius: 50%;
-      background: var(--blue); color: #fff; display: inline-flex;
-      align-items: center; justify-content: center; font-size: 0.7rem; font-style: normal;
-    }
     .page {
       width: min(1180px, 100%);
       margin: 0 auto;
@@ -67,7 +43,7 @@
       grid-template-columns: 1fr 280px;
       gap: 1rem;
       align-items: stretch;
-      height: calc(100vh - 150px);
+      height: calc(100vh - 110px);
       min-height: 520px;
     }
     .chat-stage {
@@ -166,7 +142,7 @@
     }
     .quick-q {
       display: flex; flex-wrap: wrap; gap: 0.4rem;
-      padding: 0.75rem 1rem 0;
+      padding: 0;
     }
     .quick-q button {
       appearance: none; border: 1px solid #c7d2fe; background: #f8fafc;
@@ -308,6 +284,63 @@
     @keyframes blink {
       0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; transform: translateY(-2px); }
     }
+
+    .chat-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: stretch;
+      background: #fcfcfd;
+    }
+    .history-rail {
+      flex-shrink: 0;
+      display: flex;
+      align-items: stretch;
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+    .history-toggle {
+      appearance: none; border: 0; background: #f8fafc; color: var(--muted);
+      width: 34px; cursor: pointer; font: inherit; font-size: 0.72rem;
+      writing-mode: vertical-rl; letter-spacing: 0.12em; padding: 0.6rem 0;
+    }
+    .history-toggle:hover { background: #eef2ff; color: var(--blue-deep); }
+    .history-rail.open .history-toggle { background: #eef2ff; color: var(--blue-deep); }
+    .history-panel {
+      width: 0; overflow: hidden; transition: width 0.2s ease;
+      display: flex; flex-direction: column; background: #fff;
+    }
+    .history-rail.open .history-panel { width: 210px; border-left: 1px solid var(--line); }
+    .history-rail:not(.open) .history-panel { width: 0; padding: 0; border: 0; }
+    .history-head {
+      flex-shrink: 0; padding: 0.65rem 0.75rem; font-size: 0.78rem; font-weight: 600;
+      border-bottom: 1px solid var(--line); color: var(--ink); white-space: nowrap;
+    }
+    .history-list {
+      flex: 1; min-height: 0; overflow-y: auto; padding: 0.45rem;
+      display: flex; flex-direction: column; gap: 0.35rem;
+    }
+    .history-item {
+      appearance: none; border: 1px solid var(--line); background: #f8fafc;
+      border-radius: 8px; padding: 0.45rem 0.55rem; text-align: left; cursor: pointer;
+      font: inherit; font-size: 0.72rem; color: var(--ink); width: 100%;
+    }
+    .history-item:hover { background: #eef2ff; border-color: #c7d2fe; }
+    .history-item .meta { display: block; color: var(--muted); font-size: 0.66rem; margin-top: 0.15rem; }
+    .history-empty { font-size: 0.72rem; color: var(--muted); padding: 0.5rem; white-space: nowrap; }
+    .chat-body .chat { flex: 1; border: 0; }
+    .quick-bar {
+      display: flex; align-items: flex-start; gap: 0.45rem;
+      padding: 0.75rem 1rem 0;
+    }
+    .new-chat-btn {
+      appearance: none; flex-shrink: 0; border: 1px solid #c7d2fe; background: #eef2ff;
+      color: var(--blue-deep); border-radius: 999px; padding: 0.35rem 0.75rem;
+      font: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .new-chat-btn:hover { background: #e0e7ff; }
+    .quick-bar .quick-q { padding: 0; flex: 1; }
+
     @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
       .chat-stage { height: min(70vh, 720px); max-height: min(70vh, 720px); }
@@ -316,15 +349,6 @@
   </style>
 </head>
 <body>
-  <div class="top">
-    <div class="crumb">湘财财务 AI 平台 / <strong>湘财晓助 · 财务智能办公助手</strong></div>
-    <div class="top-right">
-      <span class="badge">在线知识库</span>
-      <span id="today"></span>
-      <div class="avatar"><i>湘</i><span>财务用户</span></div>
-    </div>
-  </div>
-
   <div class="page">
     <div class="hero">
       <h1>湘财晓助 | 财务智能办公助手</h1>
@@ -338,9 +362,21 @@
           <div class="chat-head">
             <span>🤖 湘财晓助</span>
           </div>
-          <div class="chat" id="chat" role="log" aria-live="polite"></div>
+          <div class="chat-body">
+            <aside class="history-rail" id="historyRail">
+              <button type="button" class="history-toggle" id="btnHistory" title="历史对话" aria-expanded="false">历史对话</button>
+              <div class="history-panel" id="historyPanel">
+                <div class="history-head">历史对话</div>
+                <div class="history-list" id="historyList"></div>
+              </div>
+            </aside>
+            <div class="chat" id="chat" role="log" aria-live="polite"></div>
+          </div>
           <div class="composer-box">
-            <div class="quick-q" id="quickQ"></div>
+            <div class="quick-bar">
+              <button type="button" class="new-chat-btn" id="btnNewChat" title="开始新对话">+ 新对话</button>
+              <div class="quick-q" id="quickQ"></div>
+            </div>
             <div class="img-previews" id="imgPreviews" hidden></div>
             <form class="composer" id="form" autocomplete="off">
               <div class="common-menu" id="commonMenu">
@@ -420,11 +456,10 @@
     "你是企业内部财务智能知识助手「湘财晓助」。请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答使用自然、口语化的中文，可分点叙述，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要在回答中写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处标注。直接给出可执行的说明即可。不要透露底层模型名称。";
 
   const SUGGESTIONS = [
-    "差旅费的报销标准和审批流程是怎样的？",
-    "业务招待费如何审批和报销？",
-    "费用报销有时限要求吗？",
-    "公司的付款审批权限是怎么划分的？",
-    "个人因公借款或部门备用金有什么规定？"
+    "员工差旅费报销标准",
+    "普通业务往来招待标准",
+    "固定资产的折旧年限",
+    "费用报销有时限要求吗"
   ];
 
   function normalizeBase(raw) {
@@ -802,7 +837,12 @@
       btnCommon: document.getElementById("btnCommon"),
       btnUpload: document.getElementById("btnUpload"),
       fileImages: document.getElementById("fileImages"),
-      imgPreviews: document.getElementById("imgPreviews")
+      imgPreviews: document.getElementById("imgPreviews"),
+      btnNewChat: document.getElementById("btnNewChat"),
+      historyRail: document.getElementById("historyRail"),
+      btnHistory: document.getElementById("btnHistory"),
+      historyPanel: document.getElementById("historyPanel"),
+      historyList: document.getElementById("historyList")
     };
 
     const state = {
@@ -810,12 +850,11 @@
       selectedIds: new Set(),
       busy: false,
       abort: null,
-      pendingImages: []
+      pendingImages: [],
+      historyOpen: false
     };
-
-    document.getElementById("today").textContent = new Date().toLocaleString("zh-CN", {
-      year: "numeric", month: "2-digit", day: "2-digit", weekday: "long"
-    });
+    const HISTORY_KEY = "caizhi_chat_history_v1";
+    const WELCOME_TEXT = "你好，我是湘财晓助。可以回答财务制度、报销流程等财务相关的知识；也可点「常用 → 上传发票」识别票据并生成填报表单。";
 
     function setStatus(node, text, kind) {
       node.textContent = text || "";
@@ -1139,6 +1178,111 @@
       }
     }
 
+
+    function loadHistory() {
+      try {
+        const arr = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveHistory(list) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 30)));
+    }
+
+    function snapshotMessages() {
+      const nodes = el.chat.querySelectorAll(".msg");
+      const msgs = [];
+      nodes.forEach(function (node) {
+        const role = node.classList.contains("user") ? "user" : "bot";
+        const body = node.querySelector(".body");
+        const text = body ? body.textContent : "";
+        if (!text) return;
+        msgs.push({ role: role, text: text });
+      });
+      return msgs;
+    }
+
+    function hasUserMessage(msgs) {
+      return (msgs || []).some(function (m) { return m.role === "user"; });
+    }
+
+    function renderHistoryList() {
+      const list = loadHistory();
+      el.historyList.innerHTML = "";
+      if (!list.length) {
+        el.historyList.innerHTML = '<div class="history-empty">暂无历史对话</div>';
+        return;
+      }
+      list.forEach(function (item) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "history-item";
+        const title = document.createElement("span");
+        title.textContent = item.title || "未命名对话";
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        meta.textContent = item.time || "";
+        btn.appendChild(title);
+        btn.appendChild(meta);
+        btn.addEventListener("click", function () {
+          restoreConversation(item);
+        });
+        el.historyList.appendChild(btn);
+      });
+    }
+
+    function archiveCurrentConversation() {
+      const msgs = snapshotMessages();
+      if (!hasUserMessage(msgs)) return;
+      const firstUser = msgs.find(function (m) { return m.role === "user"; });
+      const title = String(firstUser && firstUser.text || "对话").replace(/\s+/g, " ").trim().slice(0, 24);
+      const now = new Date();
+      const time = now.toLocaleString("zh-CN", {
+        month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
+      });
+      const list = loadHistory();
+      list.unshift({
+        id: String(Date.now()),
+        title: title || "对话",
+        time: time,
+        messages: msgs
+      });
+      saveHistory(list);
+      renderHistoryList();
+    }
+
+    function startNewConversation() {
+      if (state.busy) return;
+      archiveCurrentConversation();
+      el.chat.innerHTML = "";
+      state.pendingImages = [];
+      renderPendingPreviews();
+      addMsg("bot", WELCOME_TEXT);
+      el.input.focus();
+    }
+
+    function restoreConversation(item) {
+      if (state.busy) return;
+      archiveCurrentConversation();
+      el.chat.innerHTML = "";
+      state.pendingImages = [];
+      renderPendingPreviews();
+      (item.messages || []).forEach(function (m) {
+        addMsg(m.role === "user" ? "user" : "bot", m.text || "");
+      });
+      el.chat.scrollTop = el.chat.scrollHeight;
+    }
+
+    function toggleHistory() {
+      state.historyOpen = !state.historyOpen;
+      el.historyRail.classList.toggle("open", state.historyOpen);
+      el.btnHistory.setAttribute("aria-expanded", state.historyOpen ? "true" : "false");
+      if (state.historyOpen) renderHistoryList();
+    }
+
     function renderQuickQ() {
       el.quickQ.innerHTML = "";
       window.Caizhi.SUGGESTIONS.forEach((q) => {
@@ -1179,9 +1323,17 @@
       ask(q);
     });
 
+
+    el.btnNewChat.addEventListener("click", startNewConversation);
+    el.btnHistory.addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleHistory();
+    });
+
     loadForm();
     renderQuickQ();
-    addMsg("bot", "你好，我是湘财晓助。可以回答财务制度、报销流程等财务相关的知识；也可点「常用 → 上传发票」识别票据并生成填报表单。");
+    renderHistoryList();
+    addMsg("bot", WELCOME_TEXT);
     connect();
   
 </script>

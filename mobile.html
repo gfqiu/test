@@ -156,7 +156,7 @@
   <div class="phone">
     <header class="topbar">
       <button type="button" aria-label="返回" onclick="location.href='index.html'">‹</button>
-      <div class="title">湘财智能体</div>
+      <div class="title">湘财晓助</div>
       <button type="button" aria-label="菜单" onclick="location.href='index.html'">⋯</button>
     </header>
     <div class="chat" id="chat" role="log" aria-live="polite"></div>
@@ -521,6 +521,7 @@
         abort.signal
       );
       if (!answer) bot.body.textContent = "模型未返回内容，请稍后重试。";
+      else bot.body.textContent = answer;
       var fb = document.createElement("div");
       fb.className = "feedback";
       fb.innerHTML = "<span>👍</span><span>👎</span>";
@@ -542,7 +543,7 @@
   function bootWelcome() {
     var bot = addBotShell();
     bot.body.textContent =
-      "你好，我是「湘财」。可咨询报销、核算、预算、税务等制度问题；回答下方「相关材料」默认收起，点击即可展开。";
+      "你好，我是湘财晓助。可以回答财务制度、报销流程等财务相关的知识；也可点「常用 → 上传发票」识别票据并生成填报表单。";
   }
 
   form.addEventListener("submit", function (e) {
