@@ -13,7 +13,11 @@
   const LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
   const LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
   const LLM_SYSTEM =
-    "你是企业内部财务智能知识助手「湘财晓助」。请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答使用自然中文，尽量简短精炼，只保留必要信息，避免冗长铺垫、重复说明和客套话。可分点，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处。不要透露底层模型名称。";
+    "你是企业内部财务智能知识助手「湘财晓助」。当前默认用户职级为「其他员工」。" +
+    "请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。" +
+    "涉及差旅、招待、费用报销等标准时：只回答「其他员工」职级适用的标准，不要主动列出或对比「领导班子」「中层正副职」等更高职级标准。" +
+    "若用户询问「领导班子」或「中层正副职」（含中层正职/副职）的标准，应礼貌说明其当前职级无权限查看，可提示仅能查询本人职级（其他员工）标准；不要泄露具体金额或细则。" +
+    "回答使用自然中文，尽量简短精炼，只保留必要信息，避免冗长铺垫、重复说明和客套话。可分点，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处。不要透露底层模型名称。";
 
   const SUGGESTIONS = [
     "员工差旅费报销标准",
@@ -21,6 +25,43 @@
     "固定资产的折旧年限",
     "费用报销有时限要求吗"
   ];
+
+  const USER_RANK = "其他员工";
+  const RESTRICTED_RANK_PATTERNS = [
+    { name: "领导班子", re: /领导班子/ },
+    { name: "中层正副职", re: /中层正副职|中层正职|中层副职|中层干部/ }
+  ];
+
+  function detectRestrictedRankAsk(question) {
+    const text = String(question || "");
+    const hits = [];
+    RESTRICTED_RANK_PATTERNS.forEach(function (item) {
+      if (item.re.test(text)) hits.push(item.name);
+    });
+    return hits;
+  }
+
+  function buildRankDeniedReply(ranks) {
+    const uniq = Array.from(new Set(ranks || []));
+    const label = uniq.length ? uniq.join("、") : "该职级";
+    const variants = [
+      "抱歉，按权限设定，您当前职级为「其他员工」，暂不能查看「" + label + "」的费用报销标准。如需了解，可查询「其他员工」适用标准。",
+      "您没有权限查看「" + label + "」相关标准。当前账号按「其他员工」职级开放查询，我只能提供该职级的报销标准说明。",
+      "「" + label + "」标准不对当前职级开放。您默认职级是「其他员工」，如需报销标准，请直接问该职级相关内容即可。"
+    ];
+    return variants[Math.floor(Math.random() * variants.length)];
+  }
+
+  function buildAskUserPrompt(question, context) {
+    return (
+      "当前用户职级：其他员工\n" +
+      "用户问题：\n" + question + "\n\n" +
+      "知识库检索片段：\n" + context + "\n\n" +
+      "请基于上述片段作答；若片段无关，请说明资料不足。" +
+      "若问题涉及费用报销/差旅/招待等标准，仅说明「其他员工」标准；若用户索要领导班子或中层正副职标准，礼貌告知无权限。" +
+      "回答尽量简短，只给关键结论与必要条件，不要冗长展开。不要使用 Markdown（如 **），不要写“依据：制度第×条/附录”等出处。"
+    );
+  }
 
   function normalizeBase(raw) {
     let base = String(raw || "").trim().replace(/\/+$/, "");
@@ -272,6 +313,7 @@
     DEFAULT_API_BASE: DEFAULT_API_BASE,
     DEFAULT_API_KEY: DEFAULT_API_KEY,
     LLM_MODEL: LLM_MODEL,
+    USER_RANK: USER_RANK,
     normalizeBase: normalizeBase,
     readConfig: readConfig,
     writeConfig: writeConfig,
@@ -281,6 +323,9 @@
     streamLLM: streamLLM,
     LLM_SYSTEM: LLM_SYSTEM,
     polishAnswer: polishAnswer,
+    detectRestrictedRankAsk: detectRestrictedRankAsk,
+    buildRankDeniedReply: buildRankDeniedReply,
+    buildAskUserPrompt: buildAskUserPrompt,
     renderCollapsedSources: renderCollapsedSources,
     sourceTitle: sourceTitle
   });
