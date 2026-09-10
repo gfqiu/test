@@ -1151,3 +1151,20 @@
       });
     });
     el.form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = el.input.value;
+      el.input.value = "";
+      ask(q);
+    });
+
+    loadForm();
+    renderQuickQ();
+    addMsg(
+      "bot",
+      "你好，我是湘财晓助。可咨询财务制度、报销流程与系统操作；也可点「常用 → 上传发票」识别票据并生成填报表单。相关材料默认收起，点击后展开。"
+    );
+    connect();
+  
+</script>
+</body>
+</html>
