@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta name="xiangcai-build" content="mobile-self-no-caizhi-20260909" />
-  <title>湘财 · 企微智能体</title>
+  <title>湘财晓助 | 企微智能体</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -188,14 +188,12 @@
   var LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
   var LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
   var LLM_SYSTEM =
-    "你是企业内部财务智能知识助手「湘财」。请严格依据用户提供的知识库检索片段回答；" +
-    "若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答简洁、分点，使用中文。不要透露底层模型名称。";
+    "你是企业内部财务智能知识助手「湘财晓助」。请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。回答使用自然、口语化的中文，可分点叙述，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要在回答中写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处标注。直接给出可执行的说明即可。不要透露底层模型名称。";
   var SUGGESTIONS = [
-    "差旅费报销需要哪些票据？",
-    "费用报销审批流程是怎样的？",
-    "固定资产如何入账与折旧？",
-    "预算追加需要什么材料？",
-    "增值税专用发票如何认证？"
+    "员工差旅费报销标准",
+    "普通业务往来招待标准",
+    "固定资产的折旧年限",
+    "费用报销有时限要求吗"
   ];
 
   function normalizeBase(raw) {
