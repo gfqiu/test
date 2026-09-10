@@ -70,15 +70,38 @@
       height: calc(100vh - 150px);
       min-height: 520px;
     }
-    .chat-card, .side-card, .cfg-drawer {
+    .chat-stage {
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border: 2px dashed #93c5fd;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #f8fbff 0%, #f1f5f9 100%);
+      padding: 0.55rem;
+      box-sizing: border-box;
+    }
+    .chat-stage-label {
+      flex-shrink: 0;
+      align-self: flex-start;
+      margin: 0 0 0.45rem 0.15rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .chat-card, .cfg-drawer {
       background: var(--card);
       border-radius: 14px;
       box-shadow: var(--shadow);
       border: 1px solid rgba(229, 231, 235, 0.9);
     }
     .chat-card {
-      height: 100%;
-      max-height: 100%;
+      flex: 1;
       min-height: 0;
       display: flex;
       flex-direction: column;
@@ -141,6 +164,17 @@
       border-top: 1px solid var(--line);
       background: #fff;
     }
+    .quick-q {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      padding: 0.75rem 1rem 0;
+    }
+    .quick-q button {
+      appearance: none; border: 1px solid #c7d2fe; background: #f8fafc;
+      border-radius: 999px; padding: 0.35rem 0.7rem; cursor: pointer;
+      font: inherit; font-size: 0.75rem; color: var(--ink); text-align: left;
+      max-width: 100%;
+    }
+    .quick-q button:hover { background: #eef2ff; border-color: #a5b4fc; }
     .img-previews {
       display: flex; flex-wrap: wrap; gap: 0.5rem;
       padding: 0.75rem 1rem 0;
@@ -170,10 +204,28 @@
       border-radius: 10px; padding: 0.7rem 1.1rem; font: inherit; font-weight: 500;
       cursor: pointer;
     }
+    .composer .common-menu {
+      position: relative; flex-shrink: 0;
+    }
+    .composer button.common-btn,
     .composer button.upload-btn {
       background: #eef2ff; color: var(--blue-deep); border: 1px solid #c7d2fe;
       padding: 0.7rem 0.9rem; white-space: nowrap;
     }
+    .composer .common-panel {
+      position: absolute; left: 0; bottom: calc(100% + 6px);
+      min-width: 128px; padding: 0.35rem;
+      background: #fff; border: 1px solid var(--line); border-radius: 10px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+      display: none; z-index: 5;
+    }
+    .composer .common-menu.open .common-panel { display: block; }
+    .composer .common-panel button {
+      width: 100%; background: #fff; color: var(--ink); border: 0;
+      border-radius: 8px; padding: 0.55rem 0.7rem; text-align: left;
+      font-weight: 500;
+    }
+    .composer .common-panel button:hover { background: #eef2ff; color: var(--blue-deep); }
     .composer button:disabled { opacity: 0.55; cursor: not-allowed; }
     .user-imgs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; }
     .user-imgs img {
@@ -213,25 +265,6 @@
     }
     .ticket-actions button.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
     .side { display: flex; flex-direction: column; gap: 0.85rem; min-height: 0; max-height: 100%; overflow-y: auto; }
-    .side-card { padding: 0.95rem; }
-    .side-card h3 {
-      font-size: 0.92rem; margin-bottom: 0.65rem; font-weight: 600;
-    }
-    .hot-q {
-      display: flex; flex-direction: column; gap: 0.45rem;
-    }
-    .hot-q button {
-      appearance: none; text-align: left; border: 1px solid var(--line);
-      background: #f8fafc; border-radius: 10px; padding: 0.55rem 0.7rem;
-      font: inherit; font-size: 0.82rem; color: var(--ink); cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .hot-q button:hover { background: #eef2ff; border-color: #c7d2fe; }
-    .value {
-      background: var(--navy); color: #e5e7eb; border: 0;
-    }
-    .value h3 { color: #fff; }
-    .value p { font-size: 0.82rem; line-height: 1.65; opacity: 0.92; }
     .cfg-drawer {
       padding: 0.75rem 0.85rem;
       opacity: 0.88;
@@ -277,7 +310,8 @@
     }
     @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
-      .chat-card { height: min(70vh, 720px); max-height: 70vh; }
+      .chat-stage { height: min(70vh, 720px); max-height: min(70vh, 720px); }
+      .chat-card { height: auto; max-height: none; }
     }
   </style>
 </head>
@@ -298,32 +332,32 @@
     </div>
 
     <div class="layout">
-      <section class="chat-card">
-        <div class="chat-head">
-          <span>🤖 智能问答</span>
-        </div>
-        <div class="chat" id="chat" role="log" aria-live="polite"></div>
-        <div class="composer-box">
-          <div class="img-previews" id="imgPreviews" hidden></div>
-          <form class="composer" id="form" autocomplete="off">
-            <button type="button" class="upload-btn" id="btnUpload" title="上传票据图片">上传图片</button>
-            <input id="fileImages" type="file" accept="image/*" multiple hidden />
-            <input id="input" type="text" maxlength="800" placeholder="请输入问题，或上传差旅票据图片识别…" aria-label="问题输入" />
-            <button type="submit" id="send">发送</button>
-          </form>
-        </div>
-      </section>
+      <div class="chat-stage">
+        <div class="chat-stage-label">展示区域</div>
+        <section class="chat-card">
+          <div class="chat-head">
+            <span>🤖 湘财晓助</span>
+          </div>
+          <div class="chat" id="chat" role="log" aria-live="polite"></div>
+          <div class="composer-box">
+            <div class="quick-q" id="quickQ"></div>
+            <div class="img-previews" id="imgPreviews" hidden></div>
+            <form class="composer" id="form" autocomplete="off">
+              <div class="common-menu" id="commonMenu">
+                <button type="button" class="common-btn" id="btnCommon" title="常用功能">常用</button>
+                <div class="common-panel" id="commonPanel">
+                  <button type="button" class="upload-btn" id="btnUpload" title="上传发票图片">上传发票</button>
+                </div>
+              </div>
+              <input id="fileImages" type="file" accept="image/*" multiple hidden />
+              <input id="input" type="text" maxlength="800" placeholder="请输入问题，或通过「常用」上传发票识别…" aria-label="问题输入" />
+              <button type="submit" id="send">发送</button>
+            </form>
+          </div>
+        </section>
+      </div>
 
       <aside class="side">
-        <div class="side-card">
-          <h3>热门问题</h3>
-          <div class="hot-q" id="hot"></div>
-        </div>
-        <div class="side-card value">
-          <h3>价值</h3>
-          <p>减少重复咨询，提升响应效率；答案可追溯到来源文档，权威可核验。</p>
-        </div>
-
         <details class="cfg-drawer" id="cfgDrawer">
           <summary>高级 · 服务对接 / 知识库 <span>⚙</span></summary>
           <div class="cfg-body">
@@ -388,11 +422,11 @@
     "不要透露底层模型名称。";
 
   const SUGGESTIONS = [
-    "差旅费报销需要哪些票据？",
-    "费用报销审批流程是怎样的？",
-    "固定资产如何入账与折旧？",
-    "预算追加需要什么材料？",
-    "增值税专用发票如何认证？"
+    "差旅费的报销标准和审批流程是怎样的？",
+    "业务招待费如何审批和报销？",
+    "费用报销有时限要求吗？",
+    "公司的付款审批权限是怎么划分的？",
+    "个人因公借款或部门备用金有什么规定？"
   ];
 
   function normalizeBase(raw) {
@@ -732,7 +766,7 @@
       form: document.getElementById("form"),
       input: document.getElementById("input"),
       send: document.getElementById("send"),
-      hot: document.getElementById("hot"),
+      quickQ: document.getElementById("quickQ"),
       apiBase: document.getElementById("apiBase"),
       apiKey: document.getElementById("apiKey"),
       method: document.getElementById("method"),
@@ -743,6 +777,8 @@
       connStatus: document.getElementById("connStatus"),
       datasetList: document.getElementById("datasetList"),
       listStatus: document.getElementById("listStatus"),
+      commonMenu: document.getElementById("commonMenu"),
+      btnCommon: document.getElementById("btnCommon"),
       btnUpload: document.getElementById("btnUpload"),
       fileImages: document.getElementById("fileImages"),
       imgPreviews: document.getElementById("imgPreviews")
@@ -1081,14 +1117,15 @@
       }
     }
 
-    function renderHot() {
-      el.hot.innerHTML = "";
+    function renderQuickQ() {
+      el.quickQ.innerHTML = "";
       window.Caizhi.SUGGESTIONS.forEach((q) => {
         const b = document.createElement("button");
         b.type = "button";
         b.textContent = q;
+        b.title = q;
         b.addEventListener("click", () => ask(q));
-        el.hot.appendChild(b);
+        el.quickQ.appendChild(b);
       });
     }
 
@@ -1097,8 +1134,16 @@
       setStatus(el.connStatus, "已保存，移动端将同步", "ok");
     });
     el.btnConnect.addEventListener("click", connect);
+    el.btnCommon.addEventListener("click", function (e) {
+      e.stopPropagation();
+      el.commonMenu.classList.toggle("open");
+    });
     el.btnUpload.addEventListener("click", function () {
+      el.commonMenu.classList.remove("open");
       el.fileImages.click();
+    });
+    document.addEventListener("click", function (e) {
+      if (!el.commonMenu.contains(e.target)) el.commonMenu.classList.remove("open");
     });
     el.fileImages.addEventListener("change", function () {
       onFilesSelected(el.fileImages.files).catch(function (err) {
@@ -1106,20 +1151,3 @@
       });
     });
     el.form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const q = el.input.value;
-      el.input.value = "";
-      ask(q);
-    });
-
-    loadForm();
-    renderHot();
-    addMsg(
-      "bot",
-      "你好，我是湘财晓助。可咨询财务制度、报销流程与系统操作；也支持上传多张差旅票据图片，识别后生成可编辑填报表单。相关材料默认收起，点击后展开。"
-    );
-    connect();
-  
-</script>
-</body>
-</html>
