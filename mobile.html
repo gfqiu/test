@@ -399,9 +399,12 @@
     return dateOnWeek(monday, weekday);
   }
   function extractTripReason(text) {
-    if (/设备检修|检修/.test(text)) return "设备检修";
+    if (/设备检|检修/.test(text)) return "设备检修";
     var m = text.match(/对接([^，,。；;\s]+)/);
-    if (m) return m[1];
+    if (m) {
+      if (/设备检|检修/.test(m[1])) return "设备检修";
+      return m[1];
+    }
     return "出差对接";
   }
   function parseTripAssistIntent(question) {

@@ -114,11 +114,14 @@
   }
 
   function extractTripReason(text) {
-    if (/设备检修/.test(text)) return "设备检修";
-    if (/检修/.test(text)) return "设备检修";
+    if (/设备检|检修/.test(text)) return "设备检修";
     if (/对接/.test(text)) {
       const m = text.match(/对接([^，,。；;\s]+)/);
-      if (m) return m[1];
+      if (m) {
+        const raw = m[1];
+        if (/设备检|检修/.test(raw)) return "设备检修";
+        return raw;
+      }
     }
     if (/会议|拜访|培训|验收|调研/.test(text)) {
       const m = text.match(/(会议|拜访|培训|验收|调研)[^，,。；;\s]*/);
