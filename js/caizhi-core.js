@@ -63,6 +63,122 @@
     );
   }
 
+  const WEEKDAY_LABEL = { 0: "日", 1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六" };
+  const WEEKDAY_CHAR = { 日: 0, 天: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6 };
+
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function formatTripDate(d) {
+    const wd = WEEKDAY_LABEL[d.getDay()] || "";
+    return pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "（周" + wd + "）";
+  }
+
+  function startOfWeekMonday(base) {
+    const d = new Date(base);
+    d.setHours(12, 0, 0, 0);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+
+  function dateOnWeek(monday, weekday) {
+    const d = new Date(monday);
+    const add = weekday === 0 ? 6 : weekday - 1;
+    d.setDate(monday.getDate() + add);
+    return d;
+  }
+
+  function resolveWeekdayToken(token, baseDate) {
+    const m = String(token || "").match(/(下|本)?周([一二三四五六日天])/);
+    if (!m) return null;
+    const prefix = m[1] || "";
+    const weekday = WEEKDAY_CHAR[m[2]];
+    if (weekday == null) return null;
+    const base = new Date(baseDate || Date.now());
+    base.setHours(12, 0, 0, 0);
+    let monday = startOfWeekMonday(base);
+    if (prefix === "下") {
+      monday = new Date(monday);
+      monday.setDate(monday.getDate() + 7);
+    } else if (!prefix) {
+      const candidate = dateOnWeek(monday, weekday);
+      if (candidate.getTime() < base.getTime() - 12 * 3600 * 1000) {
+        monday = new Date(monday);
+        monday.setDate(monday.getDate() + 7);
+      }
+    }
+    return dateOnWeek(monday, weekday);
+  }
+
+  function extractTripReason(text) {
+    if (/设备检修/.test(text)) return "设备检修";
+    if (/检修/.test(text)) return "设备检修";
+    if (/对接/.test(text)) {
+      const m = text.match(/对接([^，,。；;\s]+)/);
+      if (m) return m[1];
+    }
+    if (/会议|拜访|培训|验收|调研/.test(text)) {
+      const m = text.match(/(会议|拜访|培训|验收|调研)[^，,。；;\s]*/);
+      if (m) return m[0];
+    }
+    return "出差对接";
+  }
+
+  function parseTripAssistIntent(question) {
+    const q = String(question || "").trim();
+    if (!q) return null;
+    const destMatch = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12})/);
+    if (!destMatch) return null;
+    if (!/周[一二三四五六日天]/.test(q)) return null;
+    if (!/(回|返回|返程|回来)/.test(q) && !(/周[一二三四五六日天].*周[一二三四五六日天]/.test(q))) return null;
+
+    const startTokenMatch = q.match(/(下|本)?周[一二三四五六日天]/);
+    const endTokenMatch = q.match(/(?:，|,|。)?(?:于)?((?:下|本)?周[一二三四五六日天])\s*(?:回|返回|返程|回来)/) ||
+      q.match(/((?:下|本)?周[一二三四五六日天])(?!.*周[一二三四五六日天])/);
+
+    const startDate = resolveWeekdayToken(startTokenMatch && startTokenMatch[0], new Date());
+    let endDate = null;
+    if (endTokenMatch) {
+      const endTok = endTokenMatch[1] || endTokenMatch[0];
+      if (/^周/.test(endTok) && startDate) {
+        endDate = dateOnWeek(startOfWeekMonday(startDate), WEEKDAY_CHAR[endTok.replace(/^周/, "")]);
+      } else {
+        endDate = resolveWeekdayToken(endTok, startDate || new Date());
+      }
+    }
+    if (!startDate || !endDate) return null;
+    if (endDate.getTime() < startDate.getTime()) {
+      endDate = new Date(endDate);
+      endDate.setDate(endDate.getDate() + 7);
+    }
+
+    const nights = Math.max(0, Math.round((endDate - startDate) / (24 * 3600 * 1000)));
+    const destination = destMatch[1].replace(/对接.*/, "").replace(/市$/, "") || destMatch[1];
+    return {
+      destination: destination,
+      startDate: startDate,
+      endDate: endDate,
+      nights: nights,
+      reason: extractTripReason(q),
+      origin: "湘潭",
+      railClass: "高铁二等座",
+      hotelRate: 400
+    };
+  }
+
+  function buildTripExpenseLines(trip) {
+    const nights = trip.nights || 0;
+    return [
+      "去程 " + trip.railClass,
+      "返程 " + trip.railClass,
+      "住宿 " + nights + " 晚 × ¥" + trip.hotelRate + "/晚",
+      "市内交通及餐补（按一般员工标准）"
+    ];
+  }
+
   function normalizeBase(raw) {
     let base = String(raw || "").trim().replace(/\/+$/, "");
     if (/^http:\/\/agent\.unidt\.com\b/i.test(base)) base = base.replace(/^http:/i, "https:");
@@ -326,6 +442,9 @@
     detectRestrictedRankAsk: detectRestrictedRankAsk,
     buildRankDeniedReply: buildRankDeniedReply,
     buildAskUserPrompt: buildAskUserPrompt,
+    parseTripAssistIntent: parseTripAssistIntent,
+    formatTripDate: formatTripDate,
+    buildTripExpenseLines: buildTripExpenseLines,
     renderCollapsedSources: renderCollapsedSources,
     sourceTitle: sourceTitle
   });

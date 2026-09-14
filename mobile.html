@@ -236,6 +236,31 @@
     .typing i:nth-child(2) { animation-delay: 0.15s; }
     .typing i:nth-child(3) { animation-delay: 0.3s; }
     .hint { font-size: 13px; color: var(--hint); text-align: center; padding: 4px 0 0; }
+    .bubble.has-card { white-space: normal; padding: 0; background: transparent; box-shadow: none; }
+    .intent-card {
+      width: 100%; background: var(--ai-card); border: 1px solid var(--card-border);
+      border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .intent-card-title { font-size: 14px; font-weight: 600; color: var(--title); }
+    .intent-card-body { font-size: 14px; font-weight: 500; color: var(--ai-desc); line-height: 1.6; }
+    .intent-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+    .intent-chip {
+      font-size: 13px; color: var(--icon-blue); background: #fff;
+      border: 1px solid #C4D5FD; border-radius: 8px; padding: 6px 10px;
+    }
+    .intent-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .intent-list li {
+      background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
+      padding: 8px 10px; font-size: 13px; color: var(--text);
+    }
+    .intent-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .intent-actions button {
+      appearance: none; border: 0; border-radius: 999px; min-height: 36px;
+      padding: 8px 16px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .intent-actions button.primary { background: var(--brand); color: #fff; }
+    .intent-actions button.primary:disabled { background: var(--disabled); cursor: not-allowed; }
+    .intent-actions button.ghost { background: #fff; color: var(--text-2); border: 1px solid var(--card-border); }
     @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     @keyframes blink {
       0%, 80%, 100% { opacity: 0.25; }
