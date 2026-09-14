@@ -364,6 +364,79 @@
     );
   }
 
+  var WEEKDAY_LABEL = { 0: "日", 1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六" };
+  var WEEKDAY_CHAR = { 日: 0, 天: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6 };
+
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function formatTripDate(d) {
+    var wd = WEEKDAY_LABEL[d.getDay()] || "";
+    return pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "（周" + wd + "）";
+  }
+  function startOfWeekMonday(base) {
+    var d = new Date(base); d.setHours(12, 0, 0, 0);
+    var day = d.getDay(); var diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff); return d;
+  }
+  function dateOnWeek(monday, weekday) {
+    var d = new Date(monday);
+    var add = weekday === 0 ? 6 : weekday - 1;
+    d.setDate(monday.getDate() + add); return d;
+  }
+  function resolveWeekdayToken(token, baseDate) {
+    var m = String(token || "").match(/(下|本)?周([一二三四五六日天])/);
+    if (!m) return null;
+    var prefix = m[1] || ""; var weekday = WEEKDAY_CHAR[m[2]];
+    if (weekday == null) return null;
+    var base = new Date(baseDate || Date.now()); base.setHours(12, 0, 0, 0);
+    var monday = startOfWeekMonday(base);
+    if (prefix === "下") { monday = new Date(monday); monday.setDate(monday.getDate() + 7); }
+    else if (!prefix) {
+      var candidate = dateOnWeek(monday, weekday);
+      if (candidate.getTime() < base.getTime() - 12 * 3600 * 1000) {
+        monday = new Date(monday); monday.setDate(monday.getDate() + 7);
+      }
+    }
+    return dateOnWeek(monday, weekday);
+  }
+  function extractTripReason(text) {
+    if (/设备检修|检修/.test(text)) return "设备检修";
+    var m = text.match(/对接([^，,。；;\s]+)/);
+    if (m) return m[1];
+    return "出差对接";
+  }
+  function parseTripAssistIntent(question) {
+    var q = String(question || "").trim();
+    if (!q) return null;
+    var destMatch = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12})/);
+    if (!destMatch || !/周[一二三四五六日天]/.test(q)) return null;
+    if (!/(回|返回|返程|回来)/.test(q) && !(/周[一二三四五六日天].*周[一二三四五六日天]/.test(q))) return null;
+    var startTokenMatch = q.match(/(下|本)?周[一二三四五六日天]/);
+    var endTokenMatch = q.match(/(?:，|,|。)?(?:于)?((?:下|本)?周[一二三四五六日天])\s*(?:回|返回|返程|回来)/);
+    var startDate = resolveWeekdayToken(startTokenMatch && startTokenMatch[0], new Date());
+    var endDate = null;
+    if (endTokenMatch) {
+      var endTok = endTokenMatch[1];
+      if (/^周/.test(endTok) && startDate) endDate = dateOnWeek(startOfWeekMonday(startDate), WEEKDAY_CHAR[endTok.replace(/^周/, "")]);
+      else endDate = resolveWeekdayToken(endTok, startDate || new Date());
+    }
+    if (!startDate || !endDate) return null;
+    if (endDate.getTime() < startDate.getTime()) { endDate = new Date(endDate); endDate.setDate(endDate.getDate() + 7); }
+    var nights = Math.max(0, Math.round((endDate - startDate) / (24 * 3600 * 1000)));
+    return {
+      destination: destMatch[1].replace(/对接.*/, "").replace(/市$/, "") || destMatch[1],
+      startDate: startDate, endDate: endDate, nights: nights,
+      reason: extractTripReason(q), origin: "湘潭", railClass: "高铁二等座", hotelRate: 400
+    };
+  }
+  function buildTripExpenseLines(trip) {
+    return [
+      "去程 " + trip.railClass,
+      "返程 " + trip.railClass,
+      "住宿 " + (trip.nights || 0) + " 晚 × ¥" + trip.hotelRate + "/晚",
+      "市内交通及餐补（按一般员工标准）"
+    ];
+  }
+
   function normalizeBase(raw) {
     var base = String(raw || "").trim().replace(/\/+$/, "");
     if (/^http:\/\/agent\.unidt\.com\b/i.test(base)) base = base.replace(/^http:/i, "https:");
@@ -571,6 +644,61 @@
     return { wrap: wrap, body: body, bubble: bubble, col: col };
   }
 
+  function addBotCard() {
+    var bot = addBotShell();
+    bot.bubble.classList.add("has-card");
+    bot.body.hidden = true;
+    var card = document.createElement("div");
+    card.className = "intent-card";
+    bot.bubble.appendChild(card);
+    chat.scrollTop = chat.scrollHeight;
+    return { bot: bot, card: card };
+  }
+
+  function renderTripAssistFlow(trip) {
+    var recog = addBotCard();
+    var dateText = formatTripDate(trip.startDate) + "~" + formatTripDate(trip.endDate);
+    recog.card.innerHTML =
+      '<div class="intent-card-title">行程识别</div><div class="intent-card-body"></div><div class="intent-meta"></div>';
+    recog.card.querySelector(".intent-card-body").textContent =
+      "已识别：目的地=" + trip.destination + " · " + dateText + " · 事由=" + trip.reason +
+      "。您是一般员工标准：" + trip.railClass + "、住宿¥" + trip.hotelRate + "/晚。";
+    var meta = recog.card.querySelector(".intent-meta");
+    [trip.destination, dateText, trip.reason, trip.railClass, "住宿¥" + trip.hotelRate + "/晚"].forEach(function (label) {
+      var chip = document.createElement("span");
+      chip.className = "intent-chip";
+      chip.textContent = label;
+      meta.appendChild(chip);
+    });
+    var preview = addBotCard();
+    var lines = buildTripExpenseLines(trip);
+    var route = trip.origin + "→" + trip.destination;
+    preview.card.innerHTML =
+      '<div class="intent-card-title">差旅申请单预览</div><div class="intent-card-body"></div><ul class="intent-list"></ul><div class="intent-actions"></div>';
+    preview.card.querySelector(".intent-card-body").textContent =
+      "已生成差旅申请单预览：行程规划（" + route + "，酒店" + trip.nights + "晚）+ " + lines.length + "条费用明细。请确认提交？";
+    var list = preview.card.querySelector(".intent-list");
+    lines.forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      list.appendChild(li);
+    });
+    var actions = preview.card.querySelector(".intent-actions");
+    var confirmBtn = document.createElement("button");
+    confirmBtn.type = "button";
+    confirmBtn.className = "primary";
+    confirmBtn.textContent = "确认提交";
+    confirmBtn.addEventListener("click", function () {
+      if (confirmBtn.disabled) return;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "已提交";
+      var done = addBotShell();
+      done.body.textContent = "已在合思新建单据";
+    });
+    actions.appendChild(confirmBtn);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
   function showTyping() {
     var t = document.createElement("div");
     t.className = "typing";
@@ -625,6 +753,12 @@
         hideTyping();
         var denied = addBotShell();
         denied.body.textContent = buildRankDeniedReply(deniedRanks);
+        return;
+      }
+      var trip = parseTripAssistIntent(q);
+      if (trip) {
+        hideTyping();
+        renderTripAssistFlow(trip);
         return;
       }
       var results = await retrieve(q);
