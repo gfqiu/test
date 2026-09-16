@@ -685,9 +685,9 @@
                   <div class="common-menu" id="commonMenu">
                     <button type="button" class="common-btn" id="btnCommon" title="常用功能" aria-label="常用功能" aria-haspopup="true" aria-expanded="false">常用 ›</button>
                     <div class="common-panel" id="commonPanel" role="menu">
-                      <button type="button" class="upload-btn" id="btnTripApply" title="差旅申请演示" role="menuitem">差旅申请</button>
-                      <button type="button" class="upload-btn" id="btnTripBook" title="差旅预定演示" role="menuitem">差旅预定</button>
-                      <button type="button" class="upload-btn" id="btnExpense" title="发起报销演示" role="menuitem">发起报销</button>
+                      <button type="button" class="upload-btn" id="btnTripApply" title="差旅申请" role="menuitem">差旅申请</button>
+                      <button type="button" class="upload-btn" id="btnTripBook" title="差旅预定" role="menuitem">差旅预定</button>
+                      <button type="button" class="upload-btn" id="btnExpense" title="发起报销" role="menuitem">发起报销</button>
                       <button type="button" class="upload-btn" id="btnUpload" title="上传发票图片" role="menuitem">上传发票</button>
                       <button type="button" class="upload-btn" id="btnInvoice" title="查看开票信息" role="menuitem">开票信息</button>
                     </div>
@@ -1292,14 +1292,14 @@
     const INVOICE_MARKER = "__INVOICE_INFO__";
     const DEMO_SAMPLES = {
       tripApply: {
-        title: "差旅申请 · 演示样例",
+        title: "差旅申请",
         utterance: "下周二去长沙对接热轧产线设备检修，周四回",
-        hint: "可根据自然语言提取目的地、日期、事由，并按一般员工标准生成申请卡。"
+        prompt: "好的，请告诉我出差目的地、时间和事由，我来帮您起草差旅申请。"
       },
       tripBook: {
-        title: "差旅预定 · 演示样例",
+        title: "差旅预定",
         utterance: "帮我订下周二去长沙、周四回的车票和酒店，尽量下午出发，酒店靠近火车站",
-        hint: "按「其他员工」权限匹配高铁二等座与住宿¥400/晚，生成可确认的预定方案。",
+        prompt: "好的，请说一下行程和时间偏好。我会按您的职级标准匹配车次和酒店。",
         options: [
           { id: "rail_go", label: "去程 G1234 湘潭→长沙 14:20-15:05 二等座 ¥128" },
           { id: "rail_back", label: "返程 G1287 长沙→湘潭 17:40-18:25 二等座 ¥128" },
@@ -1307,9 +1307,9 @@
         ]
       },
       expense: {
-        title: "发起报销 · 演示样例",
+        title: "发起报销",
         utterance: "帮我把上周长沙出差的费用发起报销",
-        hint: "模拟制度匹配校验、票据读取、报销单生成、预审与推送审批，并可查询到账状态。",
+        prompt: "好的，请说明要报销的出差事项。也可以直接说具体行程，我来校验并生成报销单。",
         claimNo: "BX20260916028",
         tripSummary: "湘潭→长沙 · 09-22~09-24 · 设备检修",
         checks: [
@@ -1337,6 +1337,48 @@
         ]
       }
     };
+    const HISTORY_SEED_KEY = "caizhi_history_seeded_v2";
+    const PRESET_HISTORY = [
+      {
+        id: "preset-trip-apply",
+        title: "下周二去长沙对接设备检修",
+        time: "09-15 10:22",
+        messages: [
+          { role: "user", text: "差旅申请" },
+          { role: "bot", text: "好的，请告诉我出差目的地、时间和事由，我来帮您起草差旅申请。" },
+          { role: "user", text: "下周二去长沙对接热轧产线设备检修，周四回" },
+          { role: "bot", text: "已识别：目的地=长沙 · 09-22（周二）~09-24（周四）· 事由=设备检修。您是一般员工标准：高铁二等座、住宿¥400/晚。" },
+          { role: "bot", text: "已生成差旅申请单预览：行程规划（湘潭→长沙，酒店2晚）+ 4条费用明细。请确认提交？" },
+          { role: "bot", text: "已在合思新建单据" }
+        ]
+      },
+      {
+        id: "preset-trip-book",
+        title: "订下周二去长沙车票和酒店",
+        time: "09-15 14:08",
+        messages: [
+          { role: "user", text: "差旅预定" },
+          { role: "bot", text: "好的，请说一下行程和时间偏好。我会按您的职级标准匹配车次和酒店。" },
+          { role: "user", text: "帮我订下周二去长沙、周四回的车票和酒店，尽量下午出发，酒店靠近火车站" },
+          { role: "bot", text: "已按您的职级「其他员工」匹配：高铁二等座、住宿¥400/晚。去程 G1234 14:20、返程 G1287 17:40，长沙站智选酒店 ¥368/晚×2晚。" },
+          { role: "bot", text: "已完成差旅预定：去程/返程二等座与酒店已锁定。" }
+        ]
+      },
+      {
+        id: "preset-expense",
+        title: "报销上周长沙出差费用",
+        time: "09-16 09:35",
+        messages: [
+          { role: "user", text: "发起报销" },
+          { role: "bot", text: "好的，请说明要报销的出差事项。也可以直接说具体行程，我来校验并生成报销单。" },
+          { role: "user", text: "帮我把上周长沙出差的费用发起报销" },
+          { role: "bot", text: "制度校验通过：已关联差旅申请、职级标准未超标、票据齐全。" },
+          { role: "bot", text: "费用报销单 BX20260916028：城际交通¥256、住宿费¥736、市内交通¥86，合计¥1078。预审通过，已推送后台审批。" },
+          { role: "user", text: "查询到账" },
+          { role: "bot", text: "单号 BX20260916028：审批已通过，报销款 ¥1078 已到账。" }
+        ]
+      }
+    ];
     const INVOICE_ROWS = [
       ["发票抬头", "湘潭钢铁集团有限公司"],
       ["纳税人识别号", "9XXXXXXXXXXXXXXXX"],
@@ -1345,7 +1387,7 @@
       ["开户行", "XX银行股份有限公司XXX支行"],
       ["银行账号", "3XXXXXXXXXXXXXXX"]
     ];
-    const WELCOME_TEXT = "你好，我是湘财晓助。可答财务制度与报销问题；也可在「常用」体验差旅申请/预定、发起报销、上传发票或查看开票信息（差旅相关为模拟演示）。";
+    const WELCOME_TEXT = "你好，我是湘财晓助。可答财务制度与报销问题；也可在「常用」发起差旅申请、差旅预定、报销，或上传发票、查看开票信息。";
     const BOT_FACE_SVG =
       '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="20" r="2.4" fill="#fff"/><circle cx="31" cy="20" r="2.4" fill="#fff"/><path d="M17 29c2.4 3.2 11.6 3.2 14 0" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>';
 
@@ -1550,13 +1592,6 @@
       el.btnCommon.setAttribute("aria-expanded", "false");
     }
 
-    function appendDemoBadge(card) {
-      const badge = document.createElement("div");
-      badge.className = "intent-badge";
-      badge.textContent = "模拟演示 · 未对接真实差旅系统";
-      card.insertBefore(badge, card.firstChild);
-    }
-
     function fillKv(card, rows) {
       const dl = document.createElement("dl");
       dl.className = "intent-kv";
@@ -1579,60 +1614,21 @@
       state.demoMode = kind;
       const labels = { tripApply: "差旅申请", tripBook: "差旅预定", expense: "发起报销" };
       addMsg("user", labels[kind] || kind);
-      addMsg("bot", "已进入「" + (labels[kind] || kind) + "」模拟演示。可直接描述需求，或使用下方演示样例。");
-      const entry = addBotCard();
-      appendDemoBadge(entry.card);
-      const title = document.createElement("div");
-      title.className = "intent-card-title";
-      title.textContent = sample.title;
-      const body = document.createElement("div");
-      body.className = "intent-card-body";
-      body.textContent = sample.hint + "\n演示话术：" + sample.utterance;
-      const actions = document.createElement("div");
-      actions.className = "intent-actions";
-      const useBtn = document.createElement("button");
-      useBtn.type = "button";
-      useBtn.className = "primary";
-      useBtn.textContent = "使用演示样例";
-      useBtn.addEventListener("click", function () {
-        if (useBtn.disabled) return;
-        useBtn.disabled = true;
-        runDemoSample(kind);
-      });
-      actions.appendChild(useBtn);
-      entry.card.appendChild(title);
-      entry.card.appendChild(body);
-      entry.card.appendChild(actions);
+      addMsg("bot", sample.prompt);
+      el.input.placeholder =
+        kind === "tripApply"
+          ? "例如：下周二去长沙对接设备检修，周四回"
+          : kind === "tripBook"
+            ? "例如：订下周二去长沙、周四回的车票和酒店"
+            : "例如：帮我报销上周长沙出差费用";
       el.input.focus();
     }
 
-    function runDemoSample(kind) {
-      const sample = DEMO_SAMPLES[kind];
-      if (!sample) return;
-      if (kind === "tripApply") {
-        addMsg("user", sample.utterance);
-        const trip = window.Caizhi.parseTripAssistIntent(sample.utterance) || buildFallbackTrip();
-        renderTripAssistFlow(trip);
-        state.demoMode = null;
-        return;
-      }
-      if (kind === "tripBook") {
-        addMsg("user", sample.utterance);
-        renderTripBookFlow(sample);
-        return;
-      }
-      if (kind === "expense") {
-        addMsg("user", sample.utterance);
-        renderExpenseClaimFlow(sample);
-      }
-    }
-
     function buildFallbackTrip() {
-      const start = new Date();
-      start.setHours(12, 0, 0, 0);
-      // next Tuesday approx via existing helpers if available
       const parsed = window.Caizhi.parseTripAssistIntent("下周二去长沙对接设备检修，周四回");
       if (parsed) return parsed;
+      const start = new Date();
+      start.setHours(12, 0, 0, 0);
       const end = new Date(start);
       end.setDate(start.getDate() + 2);
       return {
@@ -1649,10 +1645,9 @@
 
     function renderTripBookFlow(sample) {
       const matchCard = addBotCard();
-      appendDemoBadge(matchCard.card);
-      matchCard.card.innerHTML +=
+      matchCard.card.innerHTML =
         '<div class="intent-card-title">标准自动匹配</div>' +
-        '<div class="intent-card-body">已按您的职级「其他员工」匹配差旅标准，并生成可预定方案。</div>';
+        '<div class="intent-card-body">已按您的职级「其他员工」匹配差旅标准，并生成预定方案。</div>';
       fillKv(matchCard.card, [
         ["职级权限", "其他员工"],
         ["交通标准", "高铁二等座"],
@@ -1661,10 +1656,9 @@
       ]);
 
       const planCard = addBotCard();
-      appendDemoBadge(planCard.card);
-      planCard.card.innerHTML +=
+      planCard.card.innerHTML =
         '<div class="intent-card-title">差旅预定方案</div>' +
-        '<div class="intent-card-body">请确认以下预定明细（演示数据）：</div>' +
+        '<div class="intent-card-body">请确认以下预定明细：</div>' +
         '<ul class="intent-list"></ul>' +
         '<div class="intent-actions"></div>';
       const list = planCard.card.querySelector(".intent-list");
@@ -1687,12 +1681,13 @@
         confirmBtn.disabled = true;
         adjustBtn.disabled = true;
         confirmBtn.textContent = "已确认";
-        addMsg("bot", "已模拟完成差旅预定：去程/返程二等座与酒店已锁定（演示）。可继续在「常用 → 发起报销」体验报销流程。");
+        addMsg("bot", "已完成差旅预定：去程/返程二等座与酒店已锁定。如需报销可随时找我。");
         state.demoMode = null;
+        el.input.placeholder = "有什么可以帮到你的";
       });
       adjustBtn.addEventListener("click", function () {
         if (adjustBtn.disabled) return;
-        addMsg("bot", "好的，请继续用一句话说明调整要求，例如“改成上午出发”或“酒店便宜一点”。");
+        addMsg("bot", "好的，请继续说明调整要求，例如“改成上午出发”或“酒店便宜一点”。");
         state.demoMode = "tripBook";
       });
       actions.appendChild(confirmBtn);
@@ -1708,10 +1703,9 @@
       };
 
       const checkCard = addBotCard();
-      appendDemoBadge(checkCard.card);
-      checkCard.card.innerHTML +=
+      checkCard.card.innerHTML =
         '<div class="intent-card-title">报销前制度校验</div>' +
-        '<div class="intent-card-body">正在比对报销事项与制度匹配度（演示）…</div>' +
+        '<div class="intent-card-body">正在比对报销事项与制度匹配度…</div>' +
         '<ul class="intent-list"></ul>';
       const checkList = checkCard.card.querySelector(".intent-list");
       (sample.checks || []).forEach(function (item) {
@@ -1721,10 +1715,9 @@
       });
 
       const ticketCard = addBotCard();
-      appendDemoBadge(ticketCard.card);
-      ticketCard.card.innerHTML +=
+      ticketCard.card.innerHTML =
         '<div class="intent-card-title">原始票据读取</div>' +
-        '<div class="intent-card-body">已模拟读取出差原始票据：</div>' +
+        '<div class="intent-card-body">已读取本次出差相关票据：</div>' +
         '<ul class="intent-list"></ul>';
       const ticketList = ticketCard.card.querySelector(".intent-list");
       (sample.tickets || []).forEach(function (t) {
@@ -1734,8 +1727,7 @@
       });
 
       const formCard = addBotCard();
-      appendDemoBadge(formCard.card);
-      formCard.card.innerHTML +=
+      formCard.card.innerHTML =
         '<div class="intent-card-title">费用报销单预览</div>' +
         '<div class="intent-card-body"></div>' +
         '<div class="intent-actions"></div>';
@@ -1744,7 +1736,6 @@
       fillKv(formCard.card, (sample.lines || []).map(function (line) {
         return [line.name, line.amount];
       }));
-      // fillKv appends after actions if we already added actions - reorder: rebuild actions at end
       const actions = formCard.card.querySelector(".intent-actions");
       formCard.card.appendChild(actions);
       const confirmBtn = document.createElement("button");
@@ -1766,8 +1757,9 @@
         if (cancelBtn.disabled) return;
         cancelBtn.disabled = true;
         confirmBtn.disabled = true;
-        addMsg("bot", "已取消本次报销提交。可重新在「常用 → 发起报销」开始。");
+        addMsg("bot", "已取消本次报销提交。需要的话可以重新发起。");
         state.demoMode = null;
+        el.input.placeholder = "有什么可以帮到你的";
       });
       actions.appendChild(confirmBtn);
       actions.appendChild(cancelBtn);
@@ -1777,14 +1769,13 @@
     function renderExpenseReviewResult(sample) {
       state.expenseClaim.statusIndex = 2;
       const review = addBotCard();
-      appendDemoBadge(review.card);
-      review.card.innerHTML +=
+      review.card.innerHTML =
         '<div class="intent-card-title">AI 报销预审结果</div>' +
-        '<div class="intent-card-body">预审通过：事项与制度匹配、票据齐全、金额未超标。已模拟推送后台正式审批。</div>';
+        '<div class="intent-card-body">预审通过：事项与制度匹配、票据齐全、金额未超标。已推送后台正式审批。</div>';
       fillKv(review.card, [
         ["报销单号", sample.claimNo],
         ["预审结论", "通过"],
-        ["后台状态", "审批中（演示）"],
+        ["后台状态", "审批中"],
         ["下一步", "可查询报销款项到账状态"]
       ]);
       const actions = document.createElement("div");
@@ -1809,18 +1800,16 @@
       if (advancePaid) claim.paid = true;
       state.expenseClaim = claim;
       const statusCard = addBotCard();
-      appendDemoBadge(statusCard.card);
-      statusCard.card.innerHTML +=
+      statusCard.card.innerHTML =
         '<div class="intent-card-title">报销到账状态</div>' +
         '<div class="intent-card-body"></div>';
       statusCard.card.querySelector(".intent-card-body").textContent = claim.paid
-        ? "单号 " + claim.claimNo + "：审批已通过，报销款 ¥1078 已模拟到账。"
-        : "单号 " + claim.claimNo + "：后台审批中，款项尚未到账（演示）。";
+        ? "单号 " + claim.claimNo + "：审批已通过，报销款 ¥1078 已到账。"
+        : "单号 " + claim.claimNo + "：后台审批中，款项尚未到账。";
       fillKv(statusCard.card, [
         ["单号", claim.claimNo],
         ["当前状态", claim.paid ? "已到账" : "审批中"],
-        ["金额", "¥1078"],
-        ["说明", "演示数据，非真实支付结果"]
+        ["金额", "¥1078"]
       ]);
       el.chat.scrollTop = el.chat.scrollHeight;
     }
@@ -1831,20 +1820,33 @@
         if (trip) {
           renderTripAssistFlow(trip);
           state.demoMode = null;
+          el.input.placeholder = "有什么可以帮到你的";
           return true;
         }
-        addMsg("bot", "还没识别到完整行程。可参考演示话术：「" + DEMO_SAMPLES.tripApply.utterance + "」");
+        if (/去.+周.+回/.test(q) || (/长沙/.test(q) && /周/.test(q))) {
+          const fallback = window.Caizhi.parseTripAssistIntent(DEMO_SAMPLES.tripApply.utterance) || buildFallbackTrip();
+          renderTripAssistFlow(fallback);
+          state.demoMode = null;
+          el.input.placeholder = "有什么可以帮到你的";
+          return true;
+        }
+        addMsg("bot", "还差一些行程信息。请补充目的地、出发和返回时间，例如：下周二去长沙对接设备检修，周四回。");
         return true;
       }
       if (state.demoMode === "tripBook") {
-        addMsg("bot", "已记录您的调整要求：「" + q + "」。以下为按「其他员工」标准重新匹配的演示方案。");
+        const isAdjust = /改成|便宜|上午|调整|换成|不要/.test(q);
+        if (isAdjust) {
+          addMsg("bot", "已按您的要求调整，以下是重新匹配的方案，请确认。");
+        }
         const sample = Object.assign({}, DEMO_SAMPLES.tripBook, {
           utterance: q,
-          options: [
-            { id: "rail_go", label: "去程 G1240 湘潭→长沙 09:18-10:02 二等座 ¥128（偏上午）" },
-            { id: "rail_back", label: "返程 G1291 长沙→湘潭 18:10-18:55 二等座 ¥128" },
-            { id: "hotel", label: "火车站附近经济型酒店 ¥329/晚 × 2晚（未超标）" }
-          ]
+          options: isAdjust
+            ? [
+                { id: "rail_go", label: "去程 G1240 湘潭→长沙 09:18-10:02 二等座 ¥128" },
+                { id: "rail_back", label: "返程 G1291 长沙→湘潭 18:10-18:55 二等座 ¥128" },
+                { id: "hotel", label: "火车站附近经济型酒店 ¥329/晚 × 2晚（未超标）" }
+              ]
+            : DEMO_SAMPLES.tripBook.options
         });
         renderTripBookFlow(sample);
         return true;
@@ -1854,8 +1856,9 @@
           showExpenseStatus(true);
           return true;
         }
-        if (state.demoMode === "expense" && /报销|发起/.test(q)) {
+        if (state.demoMode === "expense") {
           renderExpenseClaimFlow(DEMO_SAMPLES.expense);
+          el.input.placeholder = "有什么可以帮到你的";
           return true;
         }
       }
@@ -2127,6 +2130,33 @@
       localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 30)));
     }
 
+    function seedPresetHistory() {
+      const list = loadHistory();
+      const byId = {};
+      list.forEach(function (item) {
+        if (item && item.id) byId[item.id] = true;
+      });
+      let changed = false;
+      // 预置样例固定置顶，缺失则插入
+      const merged = [];
+      PRESET_HISTORY.forEach(function (preset) {
+        merged.push(preset);
+        if (!byId[preset.id]) changed = true;
+      });
+      list.forEach(function (item) {
+        if (!item || !item.id) return;
+        if (String(item.id).indexOf("preset-") === 0) return;
+        merged.push(item);
+      });
+      if (changed || !localStorage.getItem(HISTORY_SEED_KEY)) {
+        saveHistory(merged.slice(0, 30));
+        localStorage.setItem(HISTORY_SEED_KEY, "1");
+      } else {
+        // 仍确保 preset 在最前
+        saveHistory(merged.slice(0, 30));
+      }
+    }
+
     function snapshotMessages() {
       const nodes = el.chat.querySelectorAll(".msg");
       const msgs = [];
@@ -2296,6 +2326,7 @@
     });
 
     loadForm();
+    seedPresetHistory();
     renderQuickQ();
     renderHistoryList();
     renderWelcome();
