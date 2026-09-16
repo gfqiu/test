@@ -297,6 +297,26 @@
       color: var(--text-2);
       border: 1px solid var(--card-border);
     }
+    .intent-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--orange);
+      background: #fff;
+      border: 1px solid var(--orange-border);
+      border-radius: 8px;
+      padding: 4px 8px;
+      width: fit-content;
+    }
+    .intent-kv {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 6px 10px;
+      font-size: 13px;
+    }
+    .intent-kv dt { color: var(--text-2); }
+    .intent-kv dd { color: var(--text); margin: 0; word-break: break-word; }
     .info-table {
       width: 100%;
       border-collapse: collapse;
@@ -665,6 +685,9 @@
                   <div class="common-menu" id="commonMenu">
                     <button type="button" class="common-btn" id="btnCommon" title="常用功能" aria-label="常用功能" aria-haspopup="true" aria-expanded="false">常用 ›</button>
                     <div class="common-panel" id="commonPanel" role="menu">
+                      <button type="button" class="upload-btn" id="btnTripApply" title="差旅申请演示" role="menuitem">差旅申请</button>
+                      <button type="button" class="upload-btn" id="btnTripBook" title="差旅预定演示" role="menuitem">差旅预定</button>
+                      <button type="button" class="upload-btn" id="btnExpense" title="发起报销演示" role="menuitem">发起报销</button>
                       <button type="button" class="upload-btn" id="btnUpload" title="上传发票图片" role="menuitem">上传发票</button>
                       <button type="button" class="upload-btn" id="btnInvoice" title="查看开票信息" role="menuitem">开票信息</button>
                     </div>
@@ -1240,6 +1263,9 @@
       quickQ: document.getElementById("quickQ"),
       commonMenu: document.getElementById("commonMenu"),
       btnCommon: document.getElementById("btnCommon"),
+      btnTripApply: document.getElementById("btnTripApply"),
+      btnTripBook: document.getElementById("btnTripBook"),
+      btnExpense: document.getElementById("btnExpense"),
       btnUpload: document.getElementById("btnUpload"),
       btnInvoice: document.getElementById("btnInvoice"),
       fileImages: document.getElementById("fileImages"),
@@ -1258,10 +1284,59 @@
       busy: false,
       abort: null,
       pendingImages: [],
-      historyOpen: false
+      historyOpen: false,
+      demoMode: null,
+      expenseClaim: null
     };
     const HISTORY_KEY = "caizhi_chat_history_v1";
     const INVOICE_MARKER = "__INVOICE_INFO__";
+    const DEMO_SAMPLES = {
+      tripApply: {
+        title: "差旅申请 · 演示样例",
+        utterance: "下周二去长沙对接热轧产线设备检修，周四回",
+        hint: "可根据自然语言提取目的地、日期、事由，并按一般员工标准生成申请卡。"
+      },
+      tripBook: {
+        title: "差旅预定 · 演示样例",
+        utterance: "帮我订下周二去长沙、周四回的车票和酒店，尽量下午出发，酒店靠近火车站",
+        hint: "按「其他员工」权限匹配高铁二等座与住宿¥400/晚，生成可确认的预定方案。",
+        options: [
+          { id: "rail_go", label: "去程 G1234 湘潭→长沙 14:20-15:05 二等座 ¥128" },
+          { id: "rail_back", label: "返程 G1287 长沙→湘潭 17:40-18:25 二等座 ¥128" },
+          { id: "hotel", label: "长沙站智选酒店 标准间 ¥368/晚 × 2晚（未超标）" }
+        ]
+      },
+      expense: {
+        title: "发起报销 · 演示样例",
+        utterance: "帮我把上周长沙出差的费用发起报销",
+        hint: "模拟制度匹配校验、票据读取、报销单生成、预审与推送审批，并可查询到账状态。",
+        claimNo: "BX20260916028",
+        tripSummary: "湘潭→长沙 · 09-22~09-24 · 设备检修",
+        checks: [
+          { name: "出差申请匹配", result: "通过", detail: "已关联差旅申请单 CL20260915012" },
+          { name: "职级标准校验", result: "通过", detail: "交通/住宿均未超过一般员工标准" },
+          { name: "票据完整性", result: "通过", detail: "已读取高铁票2张、酒店发票1张、市内交通票2张" }
+        ],
+        tickets: [
+          "高铁票（去程）¥128 · 已识别",
+          "高铁票（返程）¥128 · 已识别",
+          "酒店增值税普票 ¥736 · 已识别",
+          "市内交通电子票合计 ¥86 · 已识别"
+        ],
+        lines: [
+          { name: "城际交通", amount: "¥256" },
+          { name: "住宿费", amount: "¥736" },
+          { name: "市内交通", amount: "¥86" },
+          { name: "合计", amount: "¥1078" }
+        ],
+        statusFlow: [
+          { key: "submitted", label: "已提交预审" },
+          { key: "passed", label: "预审通过" },
+          { key: "pushed", label: "已推送后台审批" },
+          { key: "paid", label: "报销款已到账" }
+        ]
+      }
+    };
     const INVOICE_ROWS = [
       ["发票抬头", "湘潭钢铁集团有限公司"],
       ["纳税人识别号", "9XXXXXXXXXXXXXXXX"],
@@ -1270,7 +1345,7 @@
       ["开户行", "XX银行股份有限公司XXX支行"],
       ["银行账号", "3XXXXXXXXXXXXXXX"]
     ];
-    const WELCOME_TEXT = "你好，我是湘财晓助。可答财务制度与报销问题；也可在「常用」上传发票或查看开票信息。";
+    const WELCOME_TEXT = "你好，我是湘财晓助。可答财务制度与报销问题；也可在「常用」体验差旅申请/预定、发起报销、上传发票或查看开票信息（差旅相关为模拟演示）。";
     const BOT_FACE_SVG =
       '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="20" r="2.4" fill="#fff"/><circle cx="31" cy="20" r="2.4" fill="#fff"/><path d="M17 29c2.4 3.2 11.6 3.2 14 0" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>';
 
@@ -1468,6 +1543,323 @@
       actions.appendChild(confirmBtn);
       actions.appendChild(cancelBtn);
       el.chat.scrollTop = el.chat.scrollHeight;
+    }
+
+    function closeCommonMenu() {
+      el.commonMenu.classList.remove("open");
+      el.btnCommon.setAttribute("aria-expanded", "false");
+    }
+
+    function appendDemoBadge(card) {
+      const badge = document.createElement("div");
+      badge.className = "intent-badge";
+      badge.textContent = "模拟演示 · 未对接真实差旅系统";
+      card.insertBefore(badge, card.firstChild);
+    }
+
+    function fillKv(card, rows) {
+      const dl = document.createElement("dl");
+      dl.className = "intent-kv";
+      rows.forEach(function (row) {
+        const dt = document.createElement("dt");
+        dt.textContent = row[0];
+        const dd = document.createElement("dd");
+        dd.textContent = row[1];
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+      });
+      card.appendChild(dl);
+    }
+
+    function openDemoEntry(kind) {
+      if (state.busy) return;
+      closeCommonMenu();
+      const sample = DEMO_SAMPLES[kind];
+      if (!sample) return;
+      state.demoMode = kind;
+      const labels = { tripApply: "差旅申请", tripBook: "差旅预定", expense: "发起报销" };
+      addMsg("user", labels[kind] || kind);
+      addMsg("bot", "已进入「" + (labels[kind] || kind) + "」模拟演示。可直接描述需求，或使用下方演示样例。");
+      const entry = addBotCard();
+      appendDemoBadge(entry.card);
+      const title = document.createElement("div");
+      title.className = "intent-card-title";
+      title.textContent = sample.title;
+      const body = document.createElement("div");
+      body.className = "intent-card-body";
+      body.textContent = sample.hint + "\n演示话术：" + sample.utterance;
+      const actions = document.createElement("div");
+      actions.className = "intent-actions";
+      const useBtn = document.createElement("button");
+      useBtn.type = "button";
+      useBtn.className = "primary";
+      useBtn.textContent = "使用演示样例";
+      useBtn.addEventListener("click", function () {
+        if (useBtn.disabled) return;
+        useBtn.disabled = true;
+        runDemoSample(kind);
+      });
+      actions.appendChild(useBtn);
+      entry.card.appendChild(title);
+      entry.card.appendChild(body);
+      entry.card.appendChild(actions);
+      el.input.focus();
+    }
+
+    function runDemoSample(kind) {
+      const sample = DEMO_SAMPLES[kind];
+      if (!sample) return;
+      if (kind === "tripApply") {
+        addMsg("user", sample.utterance);
+        const trip = window.Caizhi.parseTripAssistIntent(sample.utterance) || buildFallbackTrip();
+        renderTripAssistFlow(trip);
+        state.demoMode = null;
+        return;
+      }
+      if (kind === "tripBook") {
+        addMsg("user", sample.utterance);
+        renderTripBookFlow(sample);
+        return;
+      }
+      if (kind === "expense") {
+        addMsg("user", sample.utterance);
+        renderExpenseClaimFlow(sample);
+      }
+    }
+
+    function buildFallbackTrip() {
+      const start = new Date();
+      start.setHours(12, 0, 0, 0);
+      // next Tuesday approx via existing helpers if available
+      const parsed = window.Caizhi.parseTripAssistIntent("下周二去长沙对接设备检修，周四回");
+      if (parsed) return parsed;
+      const end = new Date(start);
+      end.setDate(start.getDate() + 2);
+      return {
+        destination: "长沙",
+        startDate: start,
+        endDate: end,
+        nights: 2,
+        reason: "设备检修",
+        origin: "湘潭",
+        railClass: "高铁二等座",
+        hotelRate: 400
+      };
+    }
+
+    function renderTripBookFlow(sample) {
+      const matchCard = addBotCard();
+      appendDemoBadge(matchCard.card);
+      matchCard.card.innerHTML +=
+        '<div class="intent-card-title">标准自动匹配</div>' +
+        '<div class="intent-card-body">已按您的职级「其他员工」匹配差旅标准，并生成可预定方案。</div>';
+      fillKv(matchCard.card, [
+        ["职级权限", "其他员工"],
+        ["交通标准", "高铁二等座"],
+        ["住宿标准", "¥400/晚"],
+        ["需求摘要", sample.utterance]
+      ]);
+
+      const planCard = addBotCard();
+      appendDemoBadge(planCard.card);
+      planCard.card.innerHTML +=
+        '<div class="intent-card-title">差旅预定方案</div>' +
+        '<div class="intent-card-body">请确认以下预定明细（演示数据）：</div>' +
+        '<ul class="intent-list"></ul>' +
+        '<div class="intent-actions"></div>';
+      const list = planCard.card.querySelector(".intent-list");
+      (sample.options || []).forEach(function (opt) {
+        const li = document.createElement("li");
+        li.textContent = opt.label;
+        list.appendChild(li);
+      });
+      const actions = planCard.card.querySelector(".intent-actions");
+      const confirmBtn = document.createElement("button");
+      confirmBtn.type = "button";
+      confirmBtn.className = "primary";
+      confirmBtn.textContent = "确认预定";
+      const adjustBtn = document.createElement("button");
+      adjustBtn.type = "button";
+      adjustBtn.className = "ghost";
+      adjustBtn.textContent = "再调整";
+      confirmBtn.addEventListener("click", function () {
+        if (confirmBtn.disabled) return;
+        confirmBtn.disabled = true;
+        adjustBtn.disabled = true;
+        confirmBtn.textContent = "已确认";
+        addMsg("bot", "已模拟完成差旅预定：去程/返程二等座与酒店已锁定（演示）。可继续在「常用 → 发起报销」体验报销流程。");
+        state.demoMode = null;
+      });
+      adjustBtn.addEventListener("click", function () {
+        if (adjustBtn.disabled) return;
+        addMsg("bot", "好的，请继续用一句话说明调整要求，例如“改成上午出发”或“酒店便宜一点”。");
+        state.demoMode = "tripBook";
+      });
+      actions.appendChild(confirmBtn);
+      actions.appendChild(adjustBtn);
+      el.chat.scrollTop = el.chat.scrollHeight;
+    }
+
+    function renderExpenseClaimFlow(sample) {
+      state.expenseClaim = {
+        claimNo: sample.claimNo,
+        statusIndex: 0,
+        paid: false
+      };
+
+      const checkCard = addBotCard();
+      appendDemoBadge(checkCard.card);
+      checkCard.card.innerHTML +=
+        '<div class="intent-card-title">报销前制度校验</div>' +
+        '<div class="intent-card-body">正在比对报销事项与制度匹配度（演示）…</div>' +
+        '<ul class="intent-list"></ul>';
+      const checkList = checkCard.card.querySelector(".intent-list");
+      (sample.checks || []).forEach(function (item) {
+        const li = document.createElement("li");
+        li.textContent = item.name + " · " + item.result + " — " + item.detail;
+        checkList.appendChild(li);
+      });
+
+      const ticketCard = addBotCard();
+      appendDemoBadge(ticketCard.card);
+      ticketCard.card.innerHTML +=
+        '<div class="intent-card-title">原始票据读取</div>' +
+        '<div class="intent-card-body">已模拟读取出差原始票据：</div>' +
+        '<ul class="intent-list"></ul>';
+      const ticketList = ticketCard.card.querySelector(".intent-list");
+      (sample.tickets || []).forEach(function (t) {
+        const li = document.createElement("li");
+        li.textContent = t;
+        ticketList.appendChild(li);
+      });
+
+      const formCard = addBotCard();
+      appendDemoBadge(formCard.card);
+      formCard.card.innerHTML +=
+        '<div class="intent-card-title">费用报销单预览</div>' +
+        '<div class="intent-card-body"></div>' +
+        '<div class="intent-actions"></div>';
+      formCard.card.querySelector(".intent-card-body").textContent =
+        "单号 " + sample.claimNo + " · " + sample.tripSummary;
+      fillKv(formCard.card, (sample.lines || []).map(function (line) {
+        return [line.name, line.amount];
+      }));
+      // fillKv appends after actions if we already added actions - reorder: rebuild actions at end
+      const actions = formCard.card.querySelector(".intent-actions");
+      formCard.card.appendChild(actions);
+      const confirmBtn = document.createElement("button");
+      confirmBtn.type = "button";
+      confirmBtn.className = "primary";
+      confirmBtn.textContent = "确认提交预审";
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className = "ghost";
+      cancelBtn.textContent = "返回修改";
+      confirmBtn.addEventListener("click", function () {
+        if (confirmBtn.disabled) return;
+        confirmBtn.disabled = true;
+        cancelBtn.disabled = true;
+        confirmBtn.textContent = "已提交";
+        renderExpenseReviewResult(sample);
+      });
+      cancelBtn.addEventListener("click", function () {
+        if (cancelBtn.disabled) return;
+        cancelBtn.disabled = true;
+        confirmBtn.disabled = true;
+        addMsg("bot", "已取消本次报销提交。可重新在「常用 → 发起报销」开始。");
+        state.demoMode = null;
+      });
+      actions.appendChild(confirmBtn);
+      actions.appendChild(cancelBtn);
+      el.chat.scrollTop = el.chat.scrollHeight;
+    }
+
+    function renderExpenseReviewResult(sample) {
+      state.expenseClaim.statusIndex = 2;
+      const review = addBotCard();
+      appendDemoBadge(review.card);
+      review.card.innerHTML +=
+        '<div class="intent-card-title">AI 报销预审结果</div>' +
+        '<div class="intent-card-body">预审通过：事项与制度匹配、票据齐全、金额未超标。已模拟推送后台正式审批。</div>';
+      fillKv(review.card, [
+        ["报销单号", sample.claimNo],
+        ["预审结论", "通过"],
+        ["后台状态", "审批中（演示）"],
+        ["下一步", "可查询报销款项到账状态"]
+      ]);
+      const actions = document.createElement("div");
+      actions.className = "intent-actions";
+      const statusBtn = document.createElement("button");
+      statusBtn.type = "button";
+      statusBtn.className = "primary";
+      statusBtn.textContent = "查询到账状态";
+      statusBtn.addEventListener("click", function () {
+        showExpenseStatus(true);
+      });
+      actions.appendChild(statusBtn);
+      review.card.appendChild(actions);
+      addMsg("bot", "也可直接回复「查询到账」查看进度。");
+      state.demoMode = "expenseStatus";
+      el.chat.scrollTop = el.chat.scrollHeight;
+    }
+
+    function showExpenseStatus(advancePaid) {
+      const sample = DEMO_SAMPLES.expense;
+      const claim = state.expenseClaim || { claimNo: sample.claimNo, paid: false };
+      if (advancePaid) claim.paid = true;
+      state.expenseClaim = claim;
+      const statusCard = addBotCard();
+      appendDemoBadge(statusCard.card);
+      statusCard.card.innerHTML +=
+        '<div class="intent-card-title">报销到账状态</div>' +
+        '<div class="intent-card-body"></div>';
+      statusCard.card.querySelector(".intent-card-body").textContent = claim.paid
+        ? "单号 " + claim.claimNo + "：审批已通过，报销款 ¥1078 已模拟到账。"
+        : "单号 " + claim.claimNo + "：后台审批中，款项尚未到账（演示）。";
+      fillKv(statusCard.card, [
+        ["单号", claim.claimNo],
+        ["当前状态", claim.paid ? "已到账" : "审批中"],
+        ["金额", "¥1078"],
+        ["说明", "演示数据，非真实支付结果"]
+      ]);
+      el.chat.scrollTop = el.chat.scrollHeight;
+    }
+
+    function handleDemoFollowup(q) {
+      if (state.demoMode === "tripApply") {
+        const trip = window.Caizhi.parseTripAssistIntent(q);
+        if (trip) {
+          renderTripAssistFlow(trip);
+          state.demoMode = null;
+          return true;
+        }
+        addMsg("bot", "还没识别到完整行程。可参考演示话术：「" + DEMO_SAMPLES.tripApply.utterance + "」");
+        return true;
+      }
+      if (state.demoMode === "tripBook") {
+        addMsg("bot", "已记录您的调整要求：「" + q + "」。以下为按「其他员工」标准重新匹配的演示方案。");
+        const sample = Object.assign({}, DEMO_SAMPLES.tripBook, {
+          utterance: q,
+          options: [
+            { id: "rail_go", label: "去程 G1240 湘潭→长沙 09:18-10:02 二等座 ¥128（偏上午）" },
+            { id: "rail_back", label: "返程 G1291 长沙→湘潭 18:10-18:55 二等座 ¥128" },
+            { id: "hotel", label: "火车站附近经济型酒店 ¥329/晚 × 2晚（未超标）" }
+          ]
+        });
+        renderTripBookFlow(sample);
+        return true;
+      }
+      if (state.demoMode === "expense" || state.demoMode === "expenseStatus" || state.expenseClaim) {
+        if (/到账|进度|状态|查询/.test(q)) {
+          showExpenseStatus(true);
+          return true;
+        }
+        if (state.demoMode === "expense" && /报销|发起/.test(q)) {
+          renderExpenseClaimFlow(DEMO_SAMPLES.expense);
+          return true;
+        }
+      }
+      return false;
     }
 
     function readFileAsDataUrl(file) {
@@ -1670,6 +2062,10 @@
       showTyping();
       state.abort = new AbortController();
       try {
+        if (handleDemoFollowup(q)) {
+          hideTyping();
+          return;
+        }
         const deniedRanks = window.Caizhi.detectRestrictedRankAsk(q);
         if (deniedRanks.length) {
           hideTyping();
@@ -1680,6 +2076,7 @@
         if (trip) {
           hideTyping();
           renderTripAssistFlow(trip);
+          state.demoMode = null;
           return;
         }
         persistForm();
@@ -1801,6 +2198,8 @@
       archiveCurrentConversation();
       el.chat.innerHTML = "";
       state.pendingImages = [];
+      state.demoMode = null;
+      state.expenseClaim = null;
       renderPendingPreviews();
       setHistoryOpen(false);
       renderWelcome();
@@ -1848,9 +2247,17 @@
       el.btnCommon.setAttribute("aria-expanded", open ? "true" : "false");
     });
     el.btnUpload.addEventListener("click", function () {
-      el.commonMenu.classList.remove("open");
-      el.btnCommon.setAttribute("aria-expanded", "false");
+      closeCommonMenu();
       el.fileImages.click();
+    });
+    el.btnTripApply.addEventListener("click", function () {
+      openDemoEntry("tripApply");
+    });
+    el.btnTripBook.addEventListener("click", function () {
+      openDemoEntry("tripBook");
+    });
+    el.btnExpense.addEventListener("click", function () {
+      openDemoEntry("expense");
     });
     el.btnInvoice.addEventListener("click", function () {
       showInvoiceInfo();

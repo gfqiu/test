@@ -1,0 +1,58 @@
+{
+  "note": "湘财晓助 · 常用功能模拟演示样例（未对接真实差旅/合思系统）",
+  "tripApply": {
+    "name": "差旅申请",
+    "sampleUtterance": "下周二去长沙对接热轧产线设备检修，周四回",
+    "extracted": {
+      "destination": "长沙",
+      "dateRange": "下周二 ~ 周四（动态计算具体日期）",
+      "reason": "设备检修",
+      "rank": "其他员工/一般员工",
+      "transportStandard": "高铁二等座",
+      "hotelStandard": "¥400/晚"
+    },
+    "confirmReply": "已在合思新建单据（演示）"
+  },
+  "tripBook": {
+    "name": "差旅预定",
+    "sampleUtterance": "帮我订下周二去长沙、周四回的车票和酒店，尽量下午出发，酒店靠近火车站",
+    "matchedStandard": {
+      "rank": "其他员工",
+      "rail": "高铁二等座",
+      "hotelCap": 400
+    },
+    "bookingOptions": [
+      "去程 G1234 湘潭→长沙 14:20-15:05 二等座 ¥128",
+      "返程 G1287 长沙→湘潭 17:40-18:25 二等座 ¥128",
+      "长沙站智选酒店 标准间 ¥368/晚 × 2晚（未超标）"
+    ],
+    "confirmReply": "已模拟完成差旅预定"
+  },
+  "expenseClaim": {
+    "name": "发起报销",
+    "sampleUtterance": "帮我把上周长沙出差的费用发起报销",
+    "claimNo": "BX20260916028",
+    "tripSummary": "湘潭→长沙 · 09-22~09-24 · 设备检修",
+    "policyChecks": [
+      { "name": "出差申请匹配", "result": "通过", "detail": "已关联差旅申请单 CL20260915012" },
+      { "name": "职级标准校验", "result": "通过", "detail": "交通/住宿均未超过一般员工标准" },
+      { "name": "票据完整性", "result": "通过", "detail": "高铁票2张、酒店发票1张、市内交通票2张" }
+    ],
+    "tickets": [
+      "高铁票（去程）¥128",
+      "高铁票（返程）¥128",
+      "酒店增值税普票 ¥736",
+      "市内交通电子票合计 ¥86"
+    ],
+    "expenseLines": [
+      { "name": "城际交通", "amount": "¥256" },
+      { "name": "住宿费", "amount": "¥736" },
+      { "name": "市内交通", "amount": "¥86" },
+      { "name": "合计", "amount": "¥1078" }
+    ],
+    "statusQuery": {
+      "phrases": ["查询到账", "到账状态", "报销进度"],
+      "paidReply": "审批已通过，报销款 ¥1078 已模拟到账"
+    }
+  }
+}
