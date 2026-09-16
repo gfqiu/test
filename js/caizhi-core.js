@@ -12,6 +12,9 @@
   const LLM_API_URL = "https://ai-api.unidtai.com/openapi/llm/compatible-mode/v1/chat/completions";
   const LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
   const LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
+  const LISTENHUB_API_BASE = "https://api.listenhub.app/openapi";
+  const LISTENHUB_API_KEY = "lh_sk_69286209408efabf3856b9c9_3d080bda761090aa3f0c9be10ca2a223e99cf153e16e2f70";
+  const LISTENHUB_VOICE = "xiaoyun";
   const LLM_SYSTEM =
     "你是企业内部财务智能知识助手「湘财晓助」。当前默认用户职级为「其他员工」。" +
     "请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。" +
@@ -427,12 +430,116 @@
     return s.trim();
   }
 
+  function textForSpeech(text) {
+    return polishAnswer(text)
+      .replace(/[•·]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 420);
+  }
+
+  var _voiceAudio = null;
+
+  function stopListenHubSpeech() {
+    if (_voiceAudio) {
+      try { _voiceAudio.pause(); } catch (e) {}
+      try {
+        if (_voiceAudio.src && String(_voiceAudio.src).indexOf("blob:") === 0) {
+          URL.revokeObjectURL(_voiceAudio.src);
+        }
+      } catch (e2) {}
+      _voiceAudio = null;
+    }
+  }
+
+  async function speakWithListenHub(text, opts) {
+    var spoken = textForSpeech(text);
+    if (!spoken) return null;
+    stopListenHubSpeech();
+    var voice = (opts && opts.voice) || LISTENHUB_VOICE;
+    var res = await fetch(LISTENHUB_API_BASE.replace(/\/$/, "") + "/v1/tts", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + LISTENHUB_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        input: spoken,
+        voice: voice,
+        response_format: "mp3"
+      })
+    });
+    var buf = await res.arrayBuffer();
+    var head = "";
+    try {
+      head = new TextDecoder("utf-8").decode(buf.slice(0, Math.min(buf.byteLength, 80)));
+    } catch (e) {}
+    if (!res.ok || (head && head.charAt(0) === "{")) {
+      var msg = "语音合成失败";
+      try {
+        var err = JSON.parse(new TextDecoder("utf-8").decode(buf));
+        if (err && err.message) msg = err.message;
+      } catch (e2) {}
+      throw new Error(msg);
+    }
+    var blob = new Blob([buf], { type: "audio/mpeg" });
+    var url = URL.createObjectURL(blob);
+    var audio = new Audio(url);
+    _voiceAudio = audio;
+    audio.onended = function () {
+      URL.revokeObjectURL(url);
+      if (_voiceAudio === audio) _voiceAudio = null;
+    };
+    await audio.play();
+    return audio;
+  }
+
+  function createSpeechRecognizer(handlers) {
+    var SR = global.SpeechRecognition || global.webkitSpeechRecognition;
+    if (!SR) return null;
+    var rec = new SR();
+    rec.lang = "zh-CN";
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.onstart = function () {
+      if (handlers && handlers.onStart) handlers.onStart();
+    };
+    rec.onresult = function (event) {
+      var interim = "";
+      var finalText = "";
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        var piece = event.results[i][0] && event.results[i][0].transcript
+          ? event.results[i][0].transcript
+          : "";
+        if (event.results[i].isFinal) finalText += piece;
+        else interim += piece;
+      }
+      if (handlers && handlers.onResult) {
+        handlers.onResult({
+          interim: interim,
+          finalText: finalText,
+          transcript: (finalText || interim || "").trim()
+        });
+      }
+    };
+    rec.onerror = function (event) {
+      if (handlers && handlers.onError) handlers.onError(event);
+    };
+    rec.onend = function () {
+      if (handlers && handlers.onEnd) handlers.onEnd();
+    };
+    return rec;
+  }
+
   Object.assign(global.Caizhi = global.Caizhi || {}, {
     SUGGESTIONS: SUGGESTIONS,
     DEFAULT_API_BASE: DEFAULT_API_BASE,
     DEFAULT_API_KEY: DEFAULT_API_KEY,
     LLM_MODEL: LLM_MODEL,
     USER_RANK: USER_RANK,
+    LISTENHUB_API_BASE: LISTENHUB_API_BASE,
+    LISTENHUB_VOICE: LISTENHUB_VOICE,
     normalizeBase: normalizeBase,
     readConfig: readConfig,
     writeConfig: writeConfig,
@@ -442,6 +549,10 @@
     streamLLM: streamLLM,
     LLM_SYSTEM: LLM_SYSTEM,
     polishAnswer: polishAnswer,
+    textForSpeech: textForSpeech,
+    speakWithListenHub: speakWithListenHub,
+    stopListenHubSpeech: stopListenHubSpeech,
+    createSpeechRecognizer: createSpeechRecognizer,
     detectRestrictedRankAsk: detectRestrictedRankAsk,
     buildRankDeniedReply: buildRankDeniedReply,
     buildAskUserPrompt: buildAskUserPrompt,

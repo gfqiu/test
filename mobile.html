@@ -213,9 +213,24 @@
     .composer-tools {
       display: flex; align-items: center; justify-content: space-between;
     }
+    .composer-actions {
+      display: inline-flex; align-items: center; gap: 8px; margin-left: auto;
+    }
     .composer .hint-left {
       font-size: 13px; color: var(--hint);
     }
+    .composer .mic-btn {
+      width: 48px; height: 48px; border-radius: 999px;
+      border: 0; background: var(--brand-soft); color: var(--brand);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+    }
+    .composer .mic-btn svg { width: 20px; height: 20px; display: block; }
+    .composer .mic-btn.listening {
+      background: #FEE2E2; color: #DC2626;
+      animation: mic-pulse 1.2s ease-in-out infinite;
+    }
+    .composer .mic-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .composer .send {
       width: 48px; height: 48px; border-radius: 999px;
       border: 0; background: var(--brand); color: #fff;
@@ -224,6 +239,14 @@
     }
     .composer .send svg { width: 20px; height: 20px; display: block; }
     .composer .send:disabled { background: var(--disabled); cursor: not-allowed; }
+    .voice-status {
+      font-size: 12px; color: var(--hint); min-height: 16px; line-height: 16px;
+    }
+    .voice-status.active { color: #DC2626; }
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+      50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+    }
     .dock:focus-within { box-shadow: inset 0 0 0 1px rgba(0, 71, 234, 0.18); }
     .typing {
       align-self: flex-start; display: flex; gap: 6px;
@@ -283,11 +306,17 @@
       <div class="chips" id="chips"></div>
       <form class="composer" id="form" autocomplete="off">
         <input id="input" type="text" maxlength="800" placeholder="有什么可以帮到你的" aria-label="问题输入" />
+        <div class="voice-status" id="voiceStatus" aria-live="polite"></div>
         <div class="composer-tools">
           <span class="hint-left" id="hint">配置请在 PC 端侧栏修改</span>
-          <button class="send" type="submit" id="send" aria-label="发送">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
+          <div class="composer-actions">
+            <button type="button" class="mic-btn" id="btnMic" aria-label="语音输入" title="语音输入" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+            <button class="send" type="submit" id="send" aria-label="发送">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -309,6 +338,104 @@
   var LLM_API_URL = "https://ai-api.unidtai.com/openapi/llm/compatible-mode/v1/chat/completions";
   var LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
   var LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
+  var LISTENHUB_API_BASE = "https://api.listenhub.app/openapi";
+  var LISTENHUB_API_KEY = "lh_sk_69286209408efabf3856b9c9_3d080bda761090aa3f0c9be10ca2a223e99cf153e16e2f70";
+  var LISTENHUB_VOICE = "xiaoyun";
+  var _voiceAudio = null;
+
+  function textForSpeech(text) {
+    return String(text || "")
+      .replace(/\*\*/g, "")
+      .replace(/[•·]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 420);
+  }
+
+  function stopListenHubSpeech() {
+    if (_voiceAudio) {
+      try { _voiceAudio.pause(); } catch (e) {}
+      try {
+        if (_voiceAudio.src && String(_voiceAudio.src).indexOf("blob:") === 0) {
+          URL.revokeObjectURL(_voiceAudio.src);
+        }
+      } catch (e2) {}
+      _voiceAudio = null;
+    }
+  }
+
+  async function speakWithListenHub(text) {
+    var spoken = textForSpeech(text);
+    if (!spoken) return null;
+    stopListenHubSpeech();
+    var res = await fetch(LISTENHUB_API_BASE.replace(/\/$/, "") + "/v1/tts", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + LISTENHUB_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        input: spoken,
+        voice: LISTENHUB_VOICE,
+        response_format: "mp3"
+      })
+    });
+    var buf = await res.arrayBuffer();
+    var head = "";
+    try {
+      head = new TextDecoder("utf-8").decode(buf.slice(0, Math.min(buf.byteLength, 80)));
+    } catch (e) {}
+    if (!res.ok || (head && head.charAt(0) === "{")) {
+      var msg = "语音合成失败";
+      try {
+        var err = JSON.parse(new TextDecoder("utf-8").decode(buf));
+        if (err && err.message) msg = err.message;
+      } catch (e2) {}
+      throw new Error(msg);
+    }
+    var blob = new Blob([buf], { type: "audio/mpeg" });
+    var url = URL.createObjectURL(blob);
+    var audio = new Audio(url);
+    _voiceAudio = audio;
+    audio.onended = function () {
+      URL.revokeObjectURL(url);
+      if (_voiceAudio === audio) _voiceAudio = null;
+    };
+    await audio.play();
+    return audio;
+  }
+
+  function createSpeechRecognizer(handlers) {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    var rec = new SR();
+    rec.lang = "zh-CN";
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.onstart = function () { if (handlers && handlers.onStart) handlers.onStart(); };
+    rec.onresult = function (event) {
+      var interim = "";
+      var finalText = "";
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        var piece = event.results[i][0] && event.results[i][0].transcript
+          ? event.results[i][0].transcript
+          : "";
+        if (event.results[i].isFinal) finalText += piece;
+        else interim += piece;
+      }
+      if (handlers && handlers.onResult) {
+        handlers.onResult({
+          interim: interim,
+          finalText: finalText,
+          transcript: (finalText || interim || "").trim()
+        });
+      }
+    };
+    rec.onerror = function (event) { if (handlers && handlers.onError) handlers.onError(event); };
+    rec.onend = function () { if (handlers && handlers.onEnd) handlers.onEnd(); };
+    return rec;
+  }
   var LLM_SYSTEM =
     "你是企业内部财务智能知识助手「湘财晓助」。当前默认用户职级为「其他员工」。" +
     "请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。" +
@@ -607,11 +734,99 @@
   var form = document.getElementById("form");
   var input = document.getElementById("input");
   var send = document.getElementById("send");
+  var btnMic = document.getElementById("btnMic");
+  var voiceStatus = document.getElementById("voiceStatus");
   var chips = document.getElementById("chips");
   var hint = document.getElementById("hint");
   var btnNewChat = document.getElementById("btnNewChat");
   var busy = false;
   var abort = null;
+  var voiceListening = false;
+  var voiceAsked = false;
+  var voiceFinal = "";
+  var recognition = null;
+
+  function setVoiceStatus(text, active) {
+    if (!voiceStatus) return;
+    voiceStatus.textContent = text || "";
+    voiceStatus.classList.toggle("active", !!active);
+  }
+
+  function setMicListening(on) {
+    voiceListening = !!on;
+    if (!btnMic) return;
+    btnMic.classList.toggle("listening", !!on);
+    btnMic.setAttribute("aria-pressed", on ? "true" : "false");
+    btnMic.title = on ? "停止语音输入" : "语音输入";
+  }
+
+  function stopVoiceInput() {
+    if (recognition) {
+      try { recognition.stop(); } catch (e) {}
+    }
+    setMicListening(false);
+    setVoiceStatus("", false);
+  }
+
+  function startVoiceInput() {
+    if (busy) return;
+    if (voiceListening) {
+      stopVoiceInput();
+      return;
+    }
+    stopListenHubSpeech();
+    voiceFinal = "";
+    if (!recognition) {
+      recognition = createSpeechRecognizer({
+        onStart: function () {
+          setMicListening(true);
+          setVoiceStatus("正在聆听，请说话…", true);
+        },
+        onResult: function (payload) {
+          var text = payload.transcript || "";
+          if (payload.finalText) voiceFinal = String(payload.finalText).trim();
+          if (text) input.value = text;
+          if (payload.finalText) setVoiceStatus("识别完成，正在发送…", true);
+          else setVoiceStatus("正在聆听：" + (payload.interim || "…"), true);
+        },
+        onError: function (event) {
+          var code = event && event.error ? event.error : "";
+          var tip = "语音识别失败，请重试";
+          if (code === "not-allowed") tip = "未获得麦克风权限，请在浏览器中允许后重试";
+          else if (code === "no-speech") tip = "未检测到语音，请靠近麦克风再说一次";
+          else if (code === "audio-capture") tip = "无法访问麦克风，请检查设备";
+          else if (code === "network") tip = "语音识别网络异常，请稍后重试";
+          setVoiceStatus(tip, false);
+          setMicListening(false);
+        },
+        onEnd: function () {
+          setMicListening(false);
+          var q = (voiceFinal || input.value || "").trim();
+          voiceFinal = "";
+          if (!q) {
+            if (voiceStatus && /正在聆听/.test(voiceStatus.textContent || "")) {
+              setVoiceStatus("未识别到有效内容", false);
+            }
+            return;
+          }
+          input.value = q;
+          voiceAsked = true;
+          setVoiceStatus("", false);
+          ask(q);
+        }
+      });
+    }
+    if (!recognition) {
+      setVoiceStatus("当前浏览器不支持语音识别，请改用文字输入", false);
+      return;
+    }
+    try {
+      recognition.start();
+    } catch (err) {
+      setVoiceStatus("无法启动语音识别：" + (err.message || err), false);
+      setMicListening(false);
+    }
+  }
 
   function addUser(text) {
     var welcome = chat.querySelector(".welcome-card");
@@ -744,24 +959,31 @@
   async function ask(question) {
     var q = String(question || "").trim();
     if (!q || busy) return;
+    var fromVoice = !!voiceAsked;
+    voiceAsked = false;
     busy = true;
     send.disabled = true;
+    if (btnMic) btnMic.disabled = true;
+    stopListenHubSpeech();
     addUser(q);
     input.value = "";
     showTyping();
     abort = new AbortController();
+    var speakText = "";
     try {
       var deniedRanks = detectRestrictedRankAsk(q);
       if (deniedRanks.length) {
         hideTyping();
         var denied = addBotShell();
-        denied.body.textContent = buildRankDeniedReply(deniedRanks);
+        speakText = buildRankDeniedReply(deniedRanks);
+        denied.body.textContent = speakText;
         return;
       }
       var trip = parseTripAssistIntent(q);
       if (trip) {
         hideTyping();
         renderTripAssistFlow(trip);
+        speakText = "已为您生成差旅辅助卡片，请确认行程后提交。";
         return;
       }
       var results = await retrieve(q);
@@ -785,6 +1007,7 @@
       );
       if (!answer) bot.body.textContent = "模型未返回内容，请稍后重试。";
       else bot.body.textContent = answer;
+      speakText = bot.body.textContent || "";
       var fb = document.createElement("div");
       fb.className = "feedback";
       fb.innerHTML = "<span aria-hidden='true'>↑</span><span aria-hidden='true'>↓</span>";
@@ -794,12 +1017,17 @@
     } catch (err) {
       hideTyping();
       var botErr = addBotShell();
-      botErr.body.textContent = "问答失败：" + (err && err.message ? err.message : String(err));
+      speakText = "问答失败：" + (err && err.message ? err.message : String(err));
+      botErr.body.textContent = speakText;
     } finally {
       busy = false;
       abort = null;
       send.disabled = false;
+      if (btnMic) btnMic.disabled = false;
       input.focus();
+      if (fromVoice && speakText) {
+        speakWithListenHub(speakText).catch(function () {});
+      }
     }
   }
 
@@ -821,10 +1049,18 @@
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
+    stopVoiceInput();
     ask(input.value);
   });
+  if (btnMic) {
+    btnMic.addEventListener("click", function () {
+      startVoiceInput();
+    });
+  }
   btnNewChat.addEventListener("click", function () {
     if (busy) return;
+    stopVoiceInput();
+    stopListenHubSpeech();
     bootWelcome();
   });
   window.addEventListener("storage", function (e) {
