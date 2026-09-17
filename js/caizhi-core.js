@@ -138,14 +138,20 @@
     if (!q) return "";
     let m = q.match(/(?:上周|本周|上星期|这周|下星期)([\u4e00-\u9fa5]{2,4})出差/);
     if (m) return m[1].replace(/市$/, "");
-    m = q.match(/([\u4e00-\u9fa5]{2,4})出差/);
-    if (m) return m[1].replace(/市$/, "");
     m = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12}?)(?:市)?(?=对接|开会|参观|出差|洽谈|培训|调研|办理|参加|处理|进行|订|回|返回|，|,|、|。|；|;|的|和|与|跟|[\s])/);
     if (m) return m[1].replace(/市$/, "");
     m = q.match(/去([\u4e00-\u9fa5]{2,8})市/);
     if (m) return m[1];
     m = q.match(/(?:到|赴|前往)([\u4e00-\u9fa5]{2,8})/);
     if (m) return m[1].replace(/(?:对接|开会|参观|出差).*$/, "").replace(/市$/, "");
+    m = q.match(/([\u4e00-\u9fa5]{2,4})出差/);
+    if (m) {
+      let city = m[1].replace(/市$/, "");
+      city = city.replace(/^(?:把|去|到|赴|往)/, "");
+      city = city.replace(/^[上下本这]?周/, "");
+      if (city.length > 3) city = city.slice(-2);
+      if (city.length >= 2) return city;
+    }
     m = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12})/);
     if (m) {
       return (m[1]
