@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-build="xiangcai-mobile-self-20260910">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta name="xiangcai-build" content="mobile-self-no-caizhi-20260910" />
+  <title>湘财晓助 | 企微智能体</title>
+  <style>
+    :root {
+      --bg-page: #FFFFFF;
+      --ai-card: #F2F4FB;
+      --brand: #0047EA;
+      --brand-soft: #EBF1FE;
+      --icon-bg: #DEE6FF;
+      --icon-blue: #2A67F4;
+      --title: #001036;
+      --text: #23272E;
+      --ai-desc: #596793;
+      --text-2: #535F6E;
+      --hint: #8C97A6;
+      --placeholder: #AFB6CC;
+      --border: #E7E8ED;
+      --card-border: #D3D9E9;
+      --disabled: #B9CAF1;
+      --common: #303E5D;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+      color: var(--text);
+      background: var(--bg-page);
+      display: flex;
+      justify-content: center;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid rgba(0, 71, 234, 0.35);
+      outline-offset: 2px;
+    }
+    .phone {
+      width: min(430px, 100%);
+      height: 100%;
+      max-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-page);
+      position: relative;
+    }
+    .topbar {
+      flex-shrink: 0;
+      min-height: 56px;
+      padding: 10px 16px;
+      padding-top: calc(10px + env(safe-area-inset-top, 0px));
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .topbar .title {
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--title);
+    }
+    .topbar button {
+      appearance: none; border: 0; background: var(--brand-soft); color: var(--icon-blue);
+      width: 36px; height: 36px; min-width: 36px; border-radius: 999px;
+      cursor: pointer; font-size: 18px; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .chat {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--bg-page);
+    }
+    .welcome-card {
+      width: 100%;
+      background: var(--ai-card);
+      border-radius: 20px;
+      padding: 12px 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: pop 0.28s ease both;
+    }
+    .welcome-main {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .welcome-hello {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--title);
+      margin-bottom: 8px;
+    }
+    .welcome-desc {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ai-desc);
+      line-height: 1.6;
+    }
+    .welcome-avatar {
+      width: 80px; height: 80px; flex-shrink: 0; border-radius: 15px;
+      position: relative; display: grid; place-items: center;
+    }
+    .welcome-avatar::before {
+      content: "";
+      position: absolute; inset: -8px; border-radius: 20px;
+      background: radial-gradient(circle at 40% 35%, rgba(122, 92, 255, 0.28), transparent 62%),
+                  radial-gradient(circle at 70% 70%, rgba(255, 186, 170, 0.35), transparent 60%);
+      filter: blur(8px); z-index: 0;
+    }
+    .welcome-avatar-face {
+      position: relative; z-index: 1;
+      width: 64px; height: 64px; border-radius: 14px;
+      background: linear-gradient(145deg, #7b8cff 0%, #a78bfa 42%, #ffd6c9 100%);
+      display: grid; place-items: center;
+    }
+    .welcome-avatar-face svg { width: 34px; height: 34px; display: block; }
+    .msg { max-width: 88%; animation: pop 0.28s ease both; }
+    .msg.user { align-self: flex-end; }
+    .msg.bot { align-self: flex-start; display: flex; gap: 10px; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 14px;
+      background: linear-gradient(145deg, #7b8cff 0%, #a78bfa 45%, #ffd6c9 100%);
+      display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;
+      overflow: hidden;
+    }
+    .avatar svg { width: 20px; height: 20px; display: block; }
+    .bubble {
+      border-radius: 16px;
+      padding: 12px 16px;
+      line-height: 1.6;
+      font-size: 15px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.user .bubble {
+      background: var(--brand-soft);
+      color: var(--text);
+      border-radius: 16px 16px 4px 16px;
+    }
+    .msg.bot .bubble {
+      background: var(--ai-card);
+      color: var(--text);
+    }
+    .col { display: flex; flex-direction: column; max-width: 100%; }
+    .feedback { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; opacity: 0.45; font-size: 14px; }
+    .src-block { margin-top: 8px; }
+    .src-toggle {
+      appearance: none; border: 1px solid var(--card-border); background: #fff;
+      color: var(--ai-desc); font: inherit; font-size: 13px;
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      padding: 6px 10px; border-radius: 8px;
+    }
+    .src-panel { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+    .src-panel[hidden], .src-panel.is-collapsed { display: none !important; }
+    .src-item {
+      background: #fff; border-radius: 12px; padding: 10px 12px;
+      border: 1px solid var(--card-border);
+    }
+    .src-meta { font-size: 13px; color: var(--icon-blue); font-weight: 500; }
+    .src-body { margin-top: 4px; font-size: 13px; color: var(--text-2); line-height: 1.45; white-space: pre-wrap; }
+    .dock {
+      flex-shrink: 0;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-bottom: 0;
+      border-radius: 36px 36px 0 0;
+      padding: 16px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+    .action-bar {
+      display: flex; align-items: center; gap: 4px; margin-bottom: 12px;
+    }
+    .new-chat-btn {
+      appearance: none; height: 34px; border: 0; border-radius: 999px;
+      padding: 0 16px; background: var(--brand); color: #fff;
+      font: inherit; font-size: 16px; cursor: pointer;
+    }
+    .chips {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      appearance: none; flex-shrink: 0;
+      border: 1px solid var(--card-border);
+      background: #fff; color: var(--ai-desc);
+      font: inherit; font-size: 13px;
+      padding: 6px 10px; border-radius: 8px; cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip:hover { border-color: #C4D5FD; color: var(--brand); }
+    .composer { display: flex; flex-direction: column; gap: 12px; }
+    .composer input {
+      width: 100%; border: 0; background: transparent;
+      font: inherit; font-size: 18px; color: var(--text); outline: none;
+    }
+    .composer input::placeholder { color: var(--placeholder); }
+    .composer-tools {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .composer-actions {
+      display: inline-flex; align-items: center; gap: 8px; margin-left: auto;
+    }
+    .composer .hint-left {
+      font-size: 13px; color: var(--hint);
+    }
+    .composer .mic-btn,
+    .voice-status {
+      display: none !important; /* 暂时隐藏语音入口 */
+    }
+    .composer .mic-btn {
+      width: 48px; height: 48px; border-radius: 999px;
+      border: 0; background: var(--brand-soft); color: var(--brand);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+    }
+    .composer .mic-btn svg { width: 20px; height: 20px; display: block; }
+    .composer .mic-btn.listening {
+      background: #FEE2E2; color: #DC2626;
+      animation: mic-pulse 1.2s ease-in-out infinite;
+    }
+    .composer .mic-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .composer .send {
+      width: 48px; height: 48px; border-radius: 999px;
+      border: 0; background: var(--brand); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+    }
+    .composer .send svg { width: 20px; height: 20px; display: block; }
+    .composer .send:disabled { background: var(--disabled); cursor: not-allowed; }
+    .voice-status {
+      font-size: 12px; color: var(--hint); min-height: 16px; line-height: 16px;
+    }
+    .voice-status.active { color: #DC2626; }
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+      50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+    }
+    .dock:focus-within { box-shadow: inset 0 0 0 1px rgba(0, 71, 234, 0.18); }
+    .typing {
+      align-self: flex-start; display: flex; gap: 6px;
+      padding: 12px 16px; background: var(--ai-card); border-radius: 16px;
+    }
+    .typing i {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--icon-blue);
+      display: block; animation: blink 1.1s infinite ease-in-out;
+    }
+    .typing i:nth-child(2) { animation-delay: 0.15s; }
+    .typing i:nth-child(3) { animation-delay: 0.3s; }
+    .hint { font-size: 13px; color: var(--hint); text-align: center; padding: 4px 0 0; }
+    .bubble.has-card { white-space: normal; padding: 0; background: transparent; box-shadow: none; }
+    .intent-card {
+      width: 100%; background: var(--ai-card); border: 1px solid var(--card-border);
+      border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .intent-card-title { font-size: 14px; font-weight: 600; color: var(--title); }
+    .intent-card-body { font-size: 14px; font-weight: 500; color: var(--ai-desc); line-height: 1.6; }
+    .intent-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+    .intent-chip {
+      font-size: 13px; color: var(--icon-blue); background: #fff;
+      border: 1px solid #C4D5FD; border-radius: 8px; padding: 6px 10px;
+    }
+    .intent-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .intent-list li {
+      background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
+      padding: 8px 10px; font-size: 13px; color: var(--text);
+    }
+    .intent-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .intent-actions button {
+      appearance: none; border: 0; border-radius: 999px; min-height: 36px;
+      padding: 8px 16px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .intent-actions button.primary { background: var(--brand); color: #fff; }
+    .intent-actions button.primary:disabled { background: var(--disabled); cursor: not-allowed; }
+    .intent-actions button.ghost { background: #fff; color: var(--text-2); border: 1px solid var(--card-border); }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.25; }
+      40% { opacity: 1; transform: translateY(-3px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <header class="topbar">
+      <button type="button" aria-label="返回" onclick="location.href='index.html'">‹</button>
+      <div class="title">湘财晓助</div>
+      <button type="button" aria-label="更多" onclick="location.href='index.html'">⋯</button>
+    </header>
+    <div class="chat" id="chat" role="log" aria-live="polite"></div>
+    <div class="dock">
+      <div class="action-bar">
+        <button type="button" class="new-chat-btn" id="btnNewChat" aria-label="新对话">新对话</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <form class="composer" id="form" autocomplete="off">
+        <input id="input" type="text" maxlength="800" placeholder="有什么可以帮到你的" aria-label="问题输入" />
+        <div class="voice-status" id="voiceStatus" aria-live="polite"></div>
+        <div class="composer-tools">
+          <span class="hint-left" id="hint">配置请在 PC 端侧栏修改</span>
+          <div class="composer-actions">
+            <button type="button" class="mic-btn" id="btnMic" aria-label="语音输入" title="语音输入" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+            <button class="send" type="submit" id="send" aria-label="发送">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+  window.__XIANGCAI_MOBILE_BUILD__ = "self-20260910";
+
+  var DEFAULT_API_BASE = "https://agent.unidt.com/v1";
+  var DEFAULT_API_KEY = "dataset-adoZr8SvffoDDlAGZibbdAip";
+  var STORAGE_BASE = "caizhi_api_base";
+  var STORAGE_KEY = "caizhi_api_key";
+  var STORAGE_SELECTED = "caizhi_selected_ids";
+  var STORAGE_METHOD = "caizhi_method";
+  var STORAGE_TOPK = "caizhi_topk";
+  var STORAGE_THRESHOLD = "caizhi_threshold";
+  var LLM_API_URL = "https://ai-api.unidtai.com/openapi/llm/compatible-mode/v1/chat/completions";
+  var LLM_API_KEY = "sk-60569506137942a6a2b18b7aedbef8d1";
+  var LLM_MODEL = "deepseek/deepseek-v4-flash-vision-exp";
+  var LISTENHUB_API_BASE = "https://api.listenhub.app/openapi";
+  var LISTENHUB_API_KEY = "lh_sk_69286209408efabf3856b9c9_3d080bda761090aa3f0c9be10ca2a223e99cf153e16e2f70";
+  var LISTENHUB_VOICE = "xiaoyun";
+  var _voiceAudio = null;
+
+  function textForSpeech(text) {
+    return String(text || "")
+      .replace(/\*\*/g, "")
+      .replace(/[•·]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 420);
+  }
+
+  function stopListenHubSpeech() {
+    if (_voiceAudio) {
+      try { _voiceAudio.pause(); } catch (e) {}
+      try {
+        if (_voiceAudio.src && String(_voiceAudio.src).indexOf("blob:") === 0) {
+          URL.revokeObjectURL(_voiceAudio.src);
+        }
+      } catch (e2) {}
+      _voiceAudio = null;
+    }
+  }
+
+  async function speakWithListenHub(text) {
+    var spoken = textForSpeech(text);
+    if (!spoken) return null;
+    stopListenHubSpeech();
+    var res = await fetch(LISTENHUB_API_BASE.replace(/\/$/, "") + "/v1/tts", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + LISTENHUB_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        input: spoken,
+        voice: LISTENHUB_VOICE,
+        response_format: "mp3"
+      })
+    });
+    var buf = await res.arrayBuffer();
+    var head = "";
+    try {
+      head = new TextDecoder("utf-8").decode(buf.slice(0, Math.min(buf.byteLength, 80)));
+    } catch (e) {}
+    if (!res.ok || (head && head.charAt(0) === "{")) {
+      var msg = "语音合成失败";
+      try {
+        var err = JSON.parse(new TextDecoder("utf-8").decode(buf));
+        if (err && err.message) msg = err.message;
+      } catch (e2) {}
+      throw new Error(msg);
+    }
+    var blob = new Blob([buf], { type: "audio/mpeg" });
+    var url = URL.createObjectURL(blob);
+    var audio = new Audio(url);
+    _voiceAudio = audio;
+    audio.onended = function () {
+      URL.revokeObjectURL(url);
+      if (_voiceAudio === audio) _voiceAudio = null;
+    };
+    await audio.play();
+    return audio;
+  }
+
+  function createSpeechRecognizer(handlers) {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    var rec = new SR();
+    rec.lang = "zh-CN";
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.onstart = function () { if (handlers && handlers.onStart) handlers.onStart(); };
+    rec.onresult = function (event) {
+      var interim = "";
+      var finalText = "";
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        var piece = event.results[i][0] && event.results[i][0].transcript
+          ? event.results[i][0].transcript
+          : "";
+        if (event.results[i].isFinal) finalText += piece;
+        else interim += piece;
+      }
+      if (handlers && handlers.onResult) {
+        handlers.onResult({
+          interim: interim,
+          finalText: finalText,
+          transcript: (finalText || interim || "").trim()
+        });
+      }
+    };
+    rec.onerror = function (event) { if (handlers && handlers.onError) handlers.onError(event); };
+    rec.onend = function () { if (handlers && handlers.onEnd) handlers.onEnd(); };
+    return rec;
+  }
+  var LLM_SYSTEM =
+    "你是企业内部财务智能知识助手「湘财晓助」。当前默认用户职级为「其他员工」。" +
+    "请严格依据用户提供的知识库检索片段组织答案；若片段不足以回答，请明确说明资料不足，不要编造制度条文。" +
+    "涉及差旅、招待、费用报销等标准时：只回答「其他员工」职级适用的标准，不要主动列出或对比「领导班子」「中层正副职」等更高职级标准。" +
+    "若用户询问「领导班子」或「中层正副职」（含中层正职/副职）的标准，应礼貌说明其当前职级无权限查看，可提示仅能查询本人职级（其他员工）标准；不要泄露具体金额或细则。" +
+    "回答使用自然中文，尽量简短精炼，只保留必要信息，避免冗长铺垫、重复说明和客套话。可分点，但禁止输出 Markdown 标记（如 **、#、`、- []、> 等）。不要写“依据：……”或引用“制度第×条”“附录×”“速查表”等出处。不要透露底层模型名称。";
+  var SUGGESTIONS = [
+    "员工差旅费报销标准",
+    "普通业务往来招待标准",
+    "固定资产的折旧年限",
+    "费用报销有时限要求吗"
+  ];
+  var WELCOME_TEXT = "你好，我是湘财晓助。可答财务制度与报销问题；也可在「常用」上传发票或查看开票信息。";
+  var USER_RANK = "其他员工";
+  var RESTRICTED_RANK_PATTERNS = [
+    { name: "领导班子", re: /领导班子/ },
+    { name: "中层正副职", re: /中层正副职|中层正职|中层副职|中层干部/ }
+  ];
+  var BOT_FACE_SVG =
+    '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="20" r="2.4" fill="#fff"/><circle cx="31" cy="20" r="2.4" fill="#fff"/><path d="M17 29c2.4 3.2 11.6 3.2 14 0" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>';
+
+  function detectRestrictedRankAsk(question) {
+    var text = String(question || "");
+    var hits = [];
+    RESTRICTED_RANK_PATTERNS.forEach(function (item) {
+      if (item.re.test(text)) hits.push(item.name);
+    });
+    return hits;
+  }
+
+  function buildRankDeniedReply(ranks) {
+    var uniq = [];
+    (ranks || []).forEach(function (r) {
+      if (uniq.indexOf(r) < 0) uniq.push(r);
+    });
+    var label = uniq.length ? uniq.join("、") : "该职级";
+    var variants = [
+      "抱歉，按权限设定，您当前职级为「其他员工」，暂不能查看「" + label + "」的费用报销标准。如需了解，可查询「其他员工」适用标准。",
+      "您没有权限查看「" + label + "」相关标准。当前账号按「其他员工」职级开放查询，我只能提供该职级的报销标准说明。",
+      "「" + label + "」标准不对当前职级开放。您默认职级是「其他员工」，如需报销标准，请直接问该职级相关内容即可。"
+    ];
+    return variants[Math.floor(Math.random() * variants.length)];
+  }
+
+  function buildAskUserPrompt(question, context) {
+    return (
+      "当前用户职级：其他员工\n" +
+      "用户问题：\n" + question + "\n\n" +
+      "知识库检索片段：\n" + context + "\n\n" +
+      "请基于上述片段作答；若片段无关，请说明资料不足。" +
+      "若问题涉及费用报销/差旅/招待等标准，仅说明「其他员工」标准；若用户索要领导班子或中层正副职标准，礼貌告知无权限。" +
+      "回答尽量简短，只给关键结论与必要条件，不要冗长展开。不要使用 Markdown（如 **），不要写“依据：制度第×条/附录”等出处。"
+    );
+  }
+
+  var WEEKDAY_LABEL = { 0: "日", 1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六" };
+  var WEEKDAY_CHAR = { 日: 0, 天: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6 };
+
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function formatTripDate(d) {
+    var wd = WEEKDAY_LABEL[d.getDay()] || "";
+    return pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "（周" + wd + "）";
+  }
+  function startOfWeekMonday(base) {
+    var d = new Date(base); d.setHours(12, 0, 0, 0);
+    var day = d.getDay(); var diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff); return d;
+  }
+  function dateOnWeek(monday, weekday) {
+    var d = new Date(monday);
+    var add = weekday === 0 ? 6 : weekday - 1;
+    d.setDate(monday.getDate() + add); return d;
+  }
+  function resolveWeekdayToken(token, baseDate) {
+    var m = String(token || "").match(/(下|本)?周([一二三四五六日天])/);
+    if (!m) return null;
+    var prefix = m[1] || ""; var weekday = WEEKDAY_CHAR[m[2]];
+    if (weekday == null) return null;
+    var base = new Date(baseDate || Date.now()); base.setHours(12, 0, 0, 0);
+    var monday = startOfWeekMonday(base);
+    if (prefix === "下") { monday = new Date(monday); monday.setDate(monday.getDate() + 7); }
+    else if (!prefix) {
+      var candidate = dateOnWeek(monday, weekday);
+      if (candidate.getTime() < base.getTime() - 12 * 3600 * 1000) {
+        monday = new Date(monday); monday.setDate(monday.getDate() + 7);
+      }
+    }
+    return dateOnWeek(monday, weekday);
+  }
+  function extractTripReason(text) {
+    if (/设备检|检修/.test(text)) return "设备检修";
+    var m = text.match(/对接([^，,。；;\s]+)/);
+    if (m) {
+      if (/设备检|检修/.test(m[1])) return "设备检修";
+      return m[1];
+    }
+    if (/会议|开会|拜访|培训|验收|调研|参观/.test(text)) {
+      var m2 = text.match(/(会议|开会|拜访|培训|验收|调研|参观)[^，,。；;\s]*/);
+      if (m2) return m2[0];
+    }
+    return "出差对接";
+  }
+  function extractTripDestination(text) {
+    var q = String(text || "").trim();
+    if (!q) return "";
+    var m = q.match(/(?:上周|本周|上星期|这周|下星期)([\u4e00-\u9fa5]{2,4})出差/);
+    if (m) return m[1].replace(/市$/, "");
+    m = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12}?)(?:市)?(?=对接|开会|参观|出差|洽谈|培训|调研|办理|参加|处理|进行|订|回|返回|，|,|、|。|；|;|的|和|与|跟|[\s])/);
+    if (m) return m[1].replace(/市$/, "");
+    m = q.match(/去([\u4e00-\u9fa5]{2,8})市/);
+    if (m) return m[1];
+    m = q.match(/(?:到|赴|前往)([\u4e00-\u9fa5]{2,8})/);
+    if (m) return m[1].replace(/(?:对接|开会|参观|出差).*$/, "").replace(/市$/, "");
+    m = q.match(/([\u4e00-\u9fa5]{2,4})出差/);
+    if (m) {
+      var city = m[1].replace(/市$/, "");
+      city = city.replace(/^(?:把|去|到|赴|往)/, "");
+      city = city.replace(/^[上下本这]?周/, "");
+      if (city.length > 3) city = city.slice(-2);
+      if (city.length >= 2) return city;
+    }
+    m = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12})/);
+    if (m) {
+      return (m[1]
+        .replace(/(?:对接|开会|参观|出差|洽谈|培训|调研|办理|参加).*$/, "")
+        .replace(/[，,、。；;].*$/, "")
+        .replace(/市$/, "") || m[1]).trim();
+    }
+    return "";
+  }
+  function parseTripAssistIntent(question) {
+    var q = String(question || "").trim();
+    if (!q) return null;
+    var destination = extractTripDestination(q);
+    if (!destination || !/周[一二三四五六日天]/.test(q)) return null;
+    if (!/(回|返回|返程|回来)/.test(q) && !(/周[一二三四五六日天].*周[一二三四五六日天]/.test(q))) return null;
+    var startTokenMatch = q.match(/(下|本)?周[一二三四五六日天]/);
+    var endTokenMatch = q.match(/(?:，|,|。|、)?(?:于)?((?:下|本)?周[一二三四五六日天])\s*(?:回|返回|返程|回来)/) ||
+      q.match(/((?:下|本)?周[一二三四五六日天])(?!.*周[一二三四五六日天])/);
+    var startDate = resolveWeekdayToken(startTokenMatch && startTokenMatch[0], new Date());
+    var endDate = null;
+    if (endTokenMatch) {
+      var endTok = endTokenMatch[1] || endTokenMatch[0];
+      if (/^周/.test(endTok) && startDate) endDate = dateOnWeek(startOfWeekMonday(startDate), WEEKDAY_CHAR[endTok.replace(/^周/, "")]);
+      else endDate = resolveWeekdayToken(endTok, startDate || new Date());
+    }
+    if (!startDate || !endDate) return null;
+    if (endDate.getTime() < startDate.getTime()) { endDate = new Date(endDate); endDate.setDate(endDate.getDate() + 7); }
+    var nights = Math.max(0, Math.round((endDate - startDate) / (24 * 3600 * 1000)));
+    return {
+      destination: destination,
+      startDate: startDate, endDate: endDate, nights: nights,
+      reason: extractTripReason(q), origin: "湘潭", railClass: "高铁二等座", hotelRate: 400
+    };
+  }
+  function buildTripExpenseLines(trip) {
+    return [
+      "去程 " + trip.railClass,
+      "返程 " + trip.railClass,
+      "住宿 " + (trip.nights || 0) + " 晚 × ¥" + trip.hotelRate + "/晚",
+      "市内交通及餐补（按一般员工标准）"
+    ];
+  }
+
+  function normalizeBase(raw) {
+    var base = String(raw || "").trim().replace(/\/+$/, "");
+    if (/^http:\/\/agent\.unidt\.com\b/i.test(base)) base = base.replace(/^http:/i, "https:");
+    return base;
+  }
+
+  function readConfig() {
+    var params = new URLSearchParams(location.search);
+    var fromQuery = params.get("base") || params.get("api");
+    var selected = [];
+    try { selected = JSON.parse(localStorage.getItem(STORAGE_SELECTED) || "[]"); } catch (e) { selected = []; }
+    return {
+      apiBase: normalizeBase(fromQuery || localStorage.getItem(STORAGE_BASE) || DEFAULT_API_BASE),
+      apiKey: localStorage.getItem(STORAGE_KEY) || DEFAULT_API_KEY,
+      method: localStorage.getItem(STORAGE_METHOD) || "hybrid_search",
+      topK: localStorage.getItem(STORAGE_TOPK) || "3",
+      threshold: localStorage.getItem(STORAGE_THRESHOLD) || "0",
+      selectedIds: Array.isArray(selected) ? selected : []
+    };
+  }
+
+  function writeConfig(partial) {
+    var cur = readConfig();
+    var next = Object.assign({}, cur, partial || {});
+    localStorage.setItem(STORAGE_BASE, next.apiBase);
+    localStorage.setItem(STORAGE_KEY, next.apiKey);
+    localStorage.setItem(STORAGE_METHOD, next.method);
+    localStorage.setItem(STORAGE_TOPK, String(next.topK));
+    localStorage.setItem(STORAGE_THRESHOLD, String(next.threshold));
+    localStorage.setItem(STORAGE_SELECTED, JSON.stringify(next.selectedIds || []));
+  }
+
+  async function listDatasets() {
+    var cfg = readConfig();
+    var res = await fetch(cfg.apiBase + "/datasets?page=1&limit=100", {
+      headers: { Authorization: "Bearer " + cfg.apiKey }
+    });
+    if (!res.ok) throw new Error("知识库列表失败 " + res.status);
+    var data = await res.json();
+    var list = (data && (data.data || data)) || [];
+    if (!Array.isArray(list)) list = [];
+    return { list: list, total: data && data.total };
+  }
+
+  async function retrieve(query) {
+    var cfg = readConfig();
+    var ids = cfg.selectedIds || [];
+    if (!ids.length) return [];
+    var all = [];
+    for (var i = 0; i < ids.length; i++) {
+      var res = await fetch(cfg.apiBase + "/datasets/" + ids[i] + "/" + cfg.method, {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + cfg.apiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          query: query,
+          top_k: Number(cfg.topK) || 3,
+          score_threshold: Number(cfg.threshold) || 0
+        })
+      });
+      if (!res.ok) continue;
+      var data = await res.json();
+      var records = (data && (data.records || data.data || data)) || [];
+      if (Array.isArray(records)) all = all.concat(records);
+    }
+    return all;
+  }
+
+  function buildContext(results) {
+    return (results || []).map(function (r, idx) {
+      var content = (r && (r.content || r.segment && r.segment.content)) || JSON.stringify(r);
+      return "[" + (idx + 1) + "] " + String(content).slice(0, 1200);
+    }).join("\n\n");
+  }
+
+  function polishAnswer(text) {
+    return String(text || "")
+      .replace(/\*\*/g, "")
+      .replace(/^#+\s*/gm, "")
+      .replace(/依据[：:].+/g, "")
+      .replace(/附录\s*\d+[^\n]*/g, "")
+      .trim();
+  }
+
+  async function streamLLM(messages, onDelta, signal) {
+    var res = await fetch(LLM_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + LLM_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ model: LLM_MODEL, messages: messages, stream: true }),
+      signal: signal
+    });
+    if (!res.ok) throw new Error("模型请求失败 " + res.status);
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var full = "";
+    var buf = "";
+    while (true) {
+      var chunk = await reader.read();
+      if (chunk.done) break;
+      buf += decoder.decode(chunk.value, { stream: true });
+      var parts = buf.split("\n");
+      buf = parts.pop() || "";
+      for (var i = 0; i < parts.length; i++) {
+        var line = parts[i].trim();
+        if (line.indexOf("data:") !== 0) continue;
+        var payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          var json = JSON.parse(payload);
+          var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
+          if (delta) {
+            full += delta;
+            if (onDelta) onDelta(polishAnswer(full));
+          }
+        } catch (e) {}
+      }
+    }
+    return polishAnswer(full);
+  }
+
+  function sourceTitle(item, idx) {
+    return (item && (item.document_name || item.title || item.segment && item.segment.document_name)) || ("来源 " + (idx + 1));
+  }
+
+  function renderCollapsedSources(col, sources) {
+    if (!sources || !sources.length) return;
+    var block = document.createElement("div");
+    block.className = "src-block";
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "src-toggle";
+    toggle.textContent = "参考来源 · " + sources.length;
+    var panel = document.createElement("div");
+    panel.className = "src-panel is-collapsed";
+    panel.hidden = true;
+    sources.forEach(function (s, idx) {
+      var item = document.createElement("div");
+      item.className = "src-item";
+      var meta = document.createElement("div");
+      meta.className = "src-meta";
+      meta.textContent = sourceTitle(s, idx);
+      var body = document.createElement("div");
+      body.className = "src-body";
+      body.textContent = String((s && (s.content || s.segment && s.segment.content)) || "").slice(0, 400);
+      item.appendChild(meta);
+      item.appendChild(body);
+      panel.appendChild(item);
+    });
+    toggle.addEventListener("click", function () {
+      var open = panel.hidden;
+      panel.hidden = !open;
+      panel.classList.toggle("is-collapsed", !open);
+    });
+    block.appendChild(toggle);
+    block.appendChild(panel);
+    col.appendChild(block);
+  }
+
+  var chat = document.getElementById("chat");
+  var form = document.getElementById("form");
+  var input = document.getElementById("input");
+  var send = document.getElementById("send");
+  var btnMic = document.getElementById("btnMic");
+  var voiceStatus = document.getElementById("voiceStatus");
+  var chips = document.getElementById("chips");
+  var hint = document.getElementById("hint");
+  var btnNewChat = document.getElementById("btnNewChat");
+  var busy = false;
+  var abort = null;
+  var voiceListening = false;
+  var voiceAsked = false;
+  var voiceFinal = "";
+  var recognition = null;
+
+  function setVoiceStatus(text, active) {
+    if (!voiceStatus) return;
+    voiceStatus.textContent = text || "";
+    voiceStatus.classList.toggle("active", !!active);
+  }
+
+  function setMicListening(on) {
+    voiceListening = !!on;
+    if (!btnMic) return;
+    btnMic.classList.toggle("listening", !!on);
+    btnMic.setAttribute("aria-pressed", on ? "true" : "false");
+    btnMic.title = on ? "停止语音输入" : "语音输入";
+  }
+
+  function stopVoiceInput() {
+    if (recognition) {
+      try { recognition.stop(); } catch (e) {}
+    }
+    setMicListening(false);
+    setVoiceStatus("", false);
+  }
+
+  function startVoiceInput() {
+    if (busy) return;
+    if (voiceListening) {
+      stopVoiceInput();
+      return;
+    }
+    stopListenHubSpeech();
+    voiceFinal = "";
+    if (!recognition) {
+      recognition = createSpeechRecognizer({
+        onStart: function () {
+          setMicListening(true);
+          setVoiceStatus("正在聆听，请说话…", true);
+        },
+        onResult: function (payload) {
+          var text = payload.transcript || "";
+          if (payload.finalText) voiceFinal = String(payload.finalText).trim();
+          if (text) input.value = text;
+          if (payload.finalText) setVoiceStatus("识别完成，正在发送…", true);
+          else setVoiceStatus("正在聆听：" + (payload.interim || "…"), true);
+        },
+        onError: function (event) {
+          var code = event && event.error ? event.error : "";
+          var tip = "语音识别失败，请重试";
+          if (code === "not-allowed") tip = "未获得麦克风权限，请在浏览器中允许后重试";
+          else if (code === "no-speech") tip = "未检测到语音，请靠近麦克风再说一次";
+          else if (code === "audio-capture") tip = "无法访问麦克风，请检查设备";
+          else if (code === "network") tip = "语音识别网络异常，请稍后重试";
+          setVoiceStatus(tip, false);
+          setMicListening(false);
+        },
+        onEnd: function () {
+          setMicListening(false);
+          var q = (voiceFinal || input.value || "").trim();
+          voiceFinal = "";
+          if (!q) {
+            if (voiceStatus && /正在聆听/.test(voiceStatus.textContent || "")) {
+              setVoiceStatus("未识别到有效内容", false);
+            }
+            return;
+          }
+          input.value = q;
+          voiceAsked = true;
+          setVoiceStatus("", false);
+          ask(q);
+        }
+      });
+    }
+    if (!recognition) {
+      setVoiceStatus("当前浏览器不支持语音识别，请改用文字输入", false);
+      return;
+    }
+    try {
+      recognition.start();
+    } catch (err) {
+      setVoiceStatus("无法启动语音识别：" + (err.message || err), false);
+      setMicListening(false);
+    }
+  }
+
+  function addUser(text) {
+    var welcome = chat.querySelector(".welcome-card");
+    if (welcome) welcome.remove();
+    var wrap = document.createElement("div");
+    wrap.className = "msg user";
+    var bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    chat.appendChild(wrap);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function addBotShell() {
+    var wrap = document.createElement("div");
+    wrap.className = "msg bot";
+    var avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.innerHTML = BOT_FACE_SVG;
+    var col = document.createElement("div");
+    col.className = "col";
+    var bubble = document.createElement("div");
+    bubble.className = "bubble";
+    var body = document.createElement("div");
+    body.className = "body";
+    bubble.appendChild(body);
+    col.appendChild(bubble);
+    wrap.appendChild(avatar);
+    wrap.appendChild(col);
+    chat.appendChild(wrap);
+    chat.scrollTop = chat.scrollHeight;
+    return { wrap: wrap, body: body, bubble: bubble, col: col };
+  }
+
+  function addBotCard() {
+    var bot = addBotShell();
+    bot.bubble.classList.add("has-card");
+    bot.body.hidden = true;
+    var card = document.createElement("div");
+    card.className = "intent-card";
+    bot.bubble.appendChild(card);
+    chat.scrollTop = chat.scrollHeight;
+    return { bot: bot, card: card };
+  }
+
+  function renderTripAssistFlow(trip) {
+    var recog = addBotCard();
+    var dateText = formatTripDate(trip.startDate) + "~" + formatTripDate(trip.endDate);
+    recog.card.innerHTML =
+      '<div class="intent-card-title">行程识别</div><div class="intent-card-body"></div><div class="intent-meta"></div>';
+    recog.card.querySelector(".intent-card-body").textContent =
+      "已识别：目的地=" + trip.destination + " · " + dateText + " · 事由=" + trip.reason +
+      "。您是一般员工标准：" + trip.railClass + "、住宿¥" + trip.hotelRate + "/晚。";
+    var meta = recog.card.querySelector(".intent-meta");
+    [trip.destination, dateText, trip.reason, trip.railClass, "住宿¥" + trip.hotelRate + "/晚"].forEach(function (label) {
+      var chip = document.createElement("span");
+      chip.className = "intent-chip";
+      chip.textContent = label;
+      meta.appendChild(chip);
+    });
+    var preview = addBotCard();
+    var lines = buildTripExpenseLines(trip);
+    var route = trip.origin + "→" + trip.destination;
+    preview.card.innerHTML =
+      '<div class="intent-card-title">差旅申请单预览</div><div class="intent-card-body"></div><ul class="intent-list"></ul><div class="intent-actions"></div>';
+    preview.card.querySelector(".intent-card-body").textContent =
+      "已生成差旅申请单预览：行程规划（" + route + "，酒店" + trip.nights + "晚）+ " + lines.length + "条费用明细。请确认提交？";
+    var list = preview.card.querySelector(".intent-list");
+    lines.forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      list.appendChild(li);
+    });
+    var actions = preview.card.querySelector(".intent-actions");
+    var confirmBtn = document.createElement("button");
+    confirmBtn.type = "button";
+    confirmBtn.className = "primary";
+    confirmBtn.textContent = "确认提交";
+    confirmBtn.addEventListener("click", function () {
+      if (confirmBtn.disabled) return;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "已提交";
+      var done = addBotShell();
+      done.body.textContent = "已在合思新建单据";
+    });
+    actions.appendChild(confirmBtn);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function showTyping() {
+    var t = document.createElement("div");
+    t.className = "typing";
+    t.id = "typing";
+    t.innerHTML = "<i></i><i></i><i></i>";
+    chat.appendChild(t);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function hideTyping() {
+    var t = document.getElementById("typing");
+    if (t) t.remove();
+  }
+
+  function renderChips() {
+    chips.innerHTML = "";
+    SUGGESTIONS.forEach(function (q) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.textContent = q.length > 12 ? q.slice(0, 12) + "…" : q;
+      b.title = q;
+      b.addEventListener("click", function () { ask(q); });
+      chips.appendChild(b);
+    });
+  }
+
+  async function ensureDatasets() {
+    try {
+      var res = await listDatasets();
+      var cfg = readConfig();
+      if (!cfg.selectedIds.length && res.list.length) {
+        writeConfig({ selectedIds: [res.list[0].id] });
+      }
+      hint.textContent = "已同步配置 · 知识库 " + (res.total != null ? res.total : res.list.length) + " 个";
+    } catch (e) {
+      hint.textContent = "知识库连接失败，请到 PC 端检查配置";
+    }
+  }
+
+  async function ask(question) {
+    var q = String(question || "").trim();
+    if (!q || busy) return;
+    var fromVoice = !!voiceAsked;
+    voiceAsked = false;
+    busy = true;
+    send.disabled = true;
+    if (btnMic) btnMic.disabled = true;
+    stopListenHubSpeech();
+    addUser(q);
+    input.value = "";
+    showTyping();
+    abort = new AbortController();
+    var speakText = "";
+    try {
+      var deniedRanks = detectRestrictedRankAsk(q);
+      if (deniedRanks.length) {
+        hideTyping();
+        var denied = addBotShell();
+        speakText = buildRankDeniedReply(deniedRanks);
+        denied.body.textContent = speakText;
+        return;
+      }
+      var trip = parseTripAssistIntent(q);
+      if (trip) {
+        hideTyping();
+        renderTripAssistFlow(trip);
+        speakText = "已为您生成差旅辅助卡片，请确认行程后提交。";
+        return;
+      }
+      var results = await retrieve(q);
+      var sources = results.slice(0, 5);
+      hideTyping();
+      var bot = addBotShell();
+      bot.body.textContent = results.length ? "正在根据知识库生成回答…" : "未检索到相关片段，尝试通则作答…";
+      var answer = await streamLLM(
+        [
+          { role: "system", content: LLM_SYSTEM },
+          {
+            role: "user",
+            content: buildAskUserPrompt(q, buildContext(results))
+          }
+        ],
+        function (full) {
+          bot.body.textContent = full;
+          chat.scrollTop = chat.scrollHeight;
+        },
+        abort.signal
+      );
+      if (!answer) bot.body.textContent = "模型未返回内容，请稍后重试。";
+      else bot.body.textContent = answer;
+      speakText = bot.body.textContent || "";
+      var fb = document.createElement("div");
+      fb.className = "feedback";
+      fb.innerHTML = "<span aria-hidden='true'>↑</span><span aria-hidden='true'>↓</span>";
+      bot.bubble.appendChild(fb);
+      renderCollapsedSources(bot.col, sources);
+      chat.scrollTop = chat.scrollHeight;
+    } catch (err) {
+      hideTyping();
+      var botErr = addBotShell();
+      speakText = "问答失败：" + (err && err.message ? err.message : String(err));
+      botErr.body.textContent = speakText;
+    } finally {
+      busy = false;
+      abort = null;
+      send.disabled = false;
+      if (btnMic) btnMic.disabled = false;
+      input.focus();
+      if (fromVoice && speakText) {
+        speakWithListenHub(speakText).catch(function () {});
+      }
+    }
+  }
+
+  function bootWelcome() {
+    chat.innerHTML = "";
+    var card = document.createElement("div");
+    card.className = "welcome-card";
+    card.innerHTML =
+      '<div class="welcome-main">' +
+        '<div class="welcome-copy">' +
+          '<div class="welcome-hello">Hello～</div>' +
+          '<p class="welcome-desc"></p>' +
+        "</div>" +
+        '<div class="welcome-avatar" aria-hidden="true"><div class="welcome-avatar-face">' + BOT_FACE_SVG + "</div></div>" +
+      "</div>";
+    card.querySelector(".welcome-desc").textContent = WELCOME_TEXT;
+    chat.appendChild(card);
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    stopVoiceInput();
+    ask(input.value);
+  });
+  if (btnMic) {
+    btnMic.addEventListener("click", function () {
+      startVoiceInput();
+    });
+  }
+  btnNewChat.addEventListener("click", function () {
+    if (busy) return;
+    stopVoiceInput();
+    stopListenHubSpeech();
+    bootWelcome();
+  });
+  window.addEventListener("storage", function (e) {
+    if (!e.key || String(e.key).indexOf("caizhi_") !== 0) return;
+    ensureDatasets();
+  });
+
+  renderChips();
+  bootWelcome();
+  ensureDatasets();
+})();
+  </script>
+</body>
+</html>
