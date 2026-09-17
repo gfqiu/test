@@ -519,6 +519,10 @@
       gap: 8px;
       margin-left: auto;
     }
+    .composer button.mic-btn,
+    .voice-status {
+      display: none !important; /* 暂时隐藏语音入口 */
+    }
     .composer button.mic-btn {
       appearance: none;
       width: 40px; height: 40px; min-width: 40px;
@@ -876,23 +880,46 @@
         return raw;
       }
     }
-    if (/会议|拜访|培训|验收|调研/.test(text)) {
-      const m = text.match(/(会议|拜访|培训|验收|调研)[^，,。；;\s]*/);
+    if (/会议|开会|拜访|培训|验收|调研|参观/.test(text)) {
+      const m = text.match(/(会议|开会|拜访|培训|验收|调研|参观)[^，,。；;\s]*/);
       if (m) return m[0];
     }
     return "出差对接";
   }
 
+  function extractTripDestination(text) {
+    const q = String(text || "").trim();
+    if (!q) return "";
+    let m = q.match(/(?:上周|本周|上星期|这周|下星期)([\u4e00-\u9fa5]{2,4})出差/);
+    if (m) return m[1].replace(/市$/, "");
+    m = q.match(/([\u4e00-\u9fa5]{2,4})出差/);
+    if (m) return m[1].replace(/市$/, "");
+    m = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12}?)(?:市)?(?=对接|开会|参观|出差|洽谈|培训|调研|办理|参加|处理|进行|订|回|返回|，|,|、|。|；|;|的|和|与|跟|[\s])/);
+    if (m) return m[1].replace(/市$/, "");
+    m = q.match(/去([\u4e00-\u9fa5]{2,8})市/);
+    if (m) return m[1];
+    m = q.match(/(?:到|赴|前往)([\u4e00-\u9fa5]{2,8})/);
+    if (m) return m[1].replace(/(?:对接|开会|参观|出差).*$/, "").replace(/市$/, "");
+    m = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12})/);
+    if (m) {
+      return (m[1]
+        .replace(/(?:对接|开会|参观|出差|洽谈|培训|调研|办理|参加).*$/, "")
+        .replace(/[，,、。；;].*$/, "")
+        .replace(/市$/, "") || m[1]).trim();
+    }
+    return "";
+  }
+
   function parseTripAssistIntent(question) {
     const q = String(question || "").trim();
     if (!q) return null;
-    const destMatch = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12})/);
-    if (!destMatch) return null;
+    const destination = extractTripDestination(q);
+    if (!destination) return null;
     if (!/周[一二三四五六日天]/.test(q)) return null;
     if (!/(回|返回|返程|回来)/.test(q) && !(/周[一二三四五六日天].*周[一二三四五六日天]/.test(q))) return null;
 
     const startTokenMatch = q.match(/(下|本)?周[一二三四五六日天]/);
-    const endTokenMatch = q.match(/(?:，|,|。)?(?:于)?((?:下|本)?周[一二三四五六日天])\s*(?:回|返回|返程|回来)/) ||
+    const endTokenMatch = q.match(/(?:，|,|。|、)?(?:于)?((?:下|本)?周[一二三四五六日天])\s*(?:回|返回|返程|回来)/) ||
       q.match(/((?:下|本)?周[一二三四五六日天])(?!.*周[一二三四五六日天])/);
 
     const startDate = resolveWeekdayToken(startTokenMatch && startTokenMatch[0], new Date());
@@ -912,7 +939,6 @@
     }
 
     const nights = Math.max(0, Math.round((endDate - startDate) / (24 * 3600 * 1000)));
-    const destination = destMatch[1].replace(/对接.*/, "").replace(/市$/, "") || destMatch[1];
     return {
       destination: destination,
       startDate: startDate,
@@ -1398,6 +1424,7 @@
     buildRankDeniedReply: buildRankDeniedReply,
     buildAskUserPrompt: buildAskUserPrompt,
     parseTripAssistIntent: parseTripAssistIntent,
+    extractTripDestination: extractTripDestination,
     formatTripDate: formatTripDate,
     buildTripExpenseLines: buildTripExpenseLines,
     renderCollapsedSources: renderCollapsedSources,
@@ -1450,7 +1477,8 @@
       voiceListening: false,
       voiceAsked: false,
       voiceFinal: "",
-      recognition: null
+      recognition: null,
+      lastTripDest: ""
     };
     const HISTORY_KEY = "caizhi_chat_history_v1";
     const INVOICE_MARKER = "__INVOICE_INFO__";
@@ -1781,30 +1809,87 @@
       addMsg("bot", sample.prompt);
       el.input.placeholder =
         kind === "tripApply"
-          ? "例如：下周二去长沙对接设备检修，周四回"
+          ? "例如：下周二去北京对接客户，周四回"
           : kind === "tripBook"
-            ? "例如：订下周二去长沙、周四回的车票和酒店"
-            : "例如：帮我报销上周长沙出差费用";
+            ? "例如：订下周二去武汉、周四回的车票和酒店"
+            : "例如：帮我报销上周上海出差费用";
       el.input.focus();
     }
 
-    function buildFallbackTrip() {
-      const parsed = window.Caizhi.parseTripAssistIntent("下周二去长沙对接设备检修，周四回");
-      if (parsed) return parsed;
+    function buildFallbackTrip(destHint, reasonHint) {
+      const dest = destHint || "目的地";
+      const reason = reasonHint || "出差对接";
+      const seed = "下周二去" + dest + reason + "，周四回";
+      const parsed = window.Caizhi.parseTripAssistIntent(seed);
+      if (parsed) {
+        parsed.destination = dest;
+        parsed.reason = reason;
+        return parsed;
+      }
       const start = new Date();
       start.setHours(12, 0, 0, 0);
       const end = new Date(start);
       end.setDate(start.getDate() + 2);
       return {
-        destination: "长沙",
+        destination: dest,
         startDate: start,
         endDate: end,
         nights: 2,
-        reason: "设备检修",
+        reason: reason,
         origin: "湘潭",
         railClass: "高铁二等座",
         hotelRate: 400
       };
+    }
+
+    function buildTripBookOptions(trip, q) {
+      const dest = (trip && trip.destination) || window.Caizhi.extractTripDestination(q) || "目的地";
+      const origin = (trip && trip.origin) || "湘潭";
+      const nights = (trip && trip.nights != null) ? trip.nights : 2;
+      const morning = /上午|早上|早晨/.test(String(q || ""));
+      const goNo = morning ? "G1240" : "G1234";
+      const backNo = morning ? "G1291" : "G1287";
+      const goTime = morning ? "09:18-10:02" : "14:20-15:05";
+      const backTime = morning ? "18:10-18:55" : "17:40-18:25";
+      const hotelPrice = morning ? 329 : 368;
+      return [
+        { id: "rail_go", label: "去程 " + goNo + " " + origin + "→" + dest + " " + goTime + " 二等座 ¥128" },
+        { id: "rail_back", label: "返程 " + backNo + " " + dest + "→" + origin + " " + backTime + " 二等座 ¥128" },
+        { id: "hotel", label: dest + "站智选酒店 标准间 ¥" + hotelPrice + "/晚 × " + nights + "晚（未超标）" }
+      ];
+    }
+
+    function buildExpenseSampleFromQuery(q) {
+      const sample = DEMO_SAMPLES.expense;
+      const dest =
+        window.Caizhi.extractTripDestination(q) ||
+        (String(q || "").match(/([\u4e00-\u9fa5]{2,8})(?:的)?(?:出差|行程|费用)/) || [])[1] ||
+        "出差地";
+      const reason = /设备检|检修/.test(q) ? "设备检修" : (/开会|会议/.test(q) ? "开会" : "出差对接");
+      return Object.assign({}, sample, {
+        utterance: q,
+        tripSummary: "湘潭→" + dest + " · 出差 · " + reason,
+        checks: (sample.checks || []).map(function (item) {
+          return Object.assign({}, item, {
+            detail: String(item.detail || "").replace(/长沙/g, dest)
+          });
+        }),
+        tickets: (sample.tickets || []).map(function (t) {
+          return String(t).replace(/长沙/g, dest);
+        })
+      });
+    }
+
+    function resolveTripFromUserText(q) {
+      let trip = window.Caizhi.parseTripAssistIntent(q);
+      if (trip) return trip;
+      const dest = window.Caizhi.extractTripDestination(q);
+      if (!dest) return null;
+      if (!/周[一二三四五六日天]/.test(q)) return null;
+      const reason = /设备检|检修/.test(q) ? "设备检修" : (/开会|会议/.test(q) ? "开会" : "出差对接");
+      trip = buildFallbackTrip(dest, reason);
+      trip.destination = dest;
+      return trip;
     }
 
     function renderTripBookFlow(sample) {
@@ -1980,21 +2065,14 @@
 
     function handleDemoFollowup(q) {
       if (state.demoMode === "tripApply") {
-        const trip = window.Caizhi.parseTripAssistIntent(q);
+        const trip = resolveTripFromUserText(q);
         if (trip) {
           renderTripAssistFlow(trip);
           state.demoMode = null;
           el.input.placeholder = "有什么可以帮到你的";
           return true;
         }
-        if (/去.+周.+回/.test(q) || (/长沙/.test(q) && /周/.test(q))) {
-          const fallback = window.Caizhi.parseTripAssistIntent(DEMO_SAMPLES.tripApply.utterance) || buildFallbackTrip();
-          renderTripAssistFlow(fallback);
-          state.demoMode = null;
-          el.input.placeholder = "有什么可以帮到你的";
-          return true;
-        }
-        addMsg("bot", "还差一些行程信息。请补充目的地、出发和返回时间，例如：下周二去长沙对接设备检修，周四回。");
+        addMsg("bot", "还差一些行程信息。请补充目的地、出发和返回时间，例如：下周二去北京对接客户，周四回。");
         return true;
       }
       if (state.demoMode === "tripBook") {
@@ -2002,16 +2080,17 @@
         if (isAdjust) {
           addMsg("bot", "已按您的要求调整，以下是重新匹配的方案，请确认。");
         }
-        const sample = Object.assign({}, DEMO_SAMPLES.tripBook, {
+        const trip = resolveTripFromUserText(q) || buildFallbackTrip(
+          window.Caizhi.extractTripDestination(q) || state.lastTripDest || "",
+          "出差对接"
+        );
+        if (trip && trip.destination) state.lastTripDest = trip.destination;
+        const sample = {
+          title: DEMO_SAMPLES.tripBook.title,
           utterance: q,
-          options: isAdjust
-            ? [
-                { id: "rail_go", label: "去程 G1240 湘潭→长沙 09:18-10:02 二等座 ¥128" },
-                { id: "rail_back", label: "返程 G1291 长沙→湘潭 18:10-18:55 二等座 ¥128" },
-                { id: "hotel", label: "火车站附近经济型酒店 ¥329/晚 × 2晚（未超标）" }
-              ]
-            : DEMO_SAMPLES.tripBook.options
-        });
+          prompt: DEMO_SAMPLES.tripBook.prompt,
+          options: buildTripBookOptions(trip, q)
+        };
         renderTripBookFlow(sample);
         return true;
       }
@@ -2021,7 +2100,7 @@
           return true;
         }
         if (state.demoMode === "expense") {
-          renderExpenseClaimFlow(DEMO_SAMPLES.expense);
+          renderExpenseClaimFlow(buildExpenseSampleFromQuery(q));
           el.input.placeholder = "有什么可以帮到你的";
           return true;
         }

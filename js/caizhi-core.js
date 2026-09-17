@@ -126,23 +126,46 @@
         return raw;
       }
     }
-    if (/会议|拜访|培训|验收|调研/.test(text)) {
-      const m = text.match(/(会议|拜访|培训|验收|调研)[^，,。；;\s]*/);
+    if (/会议|开会|拜访|培训|验收|调研|参观/.test(text)) {
+      const m = text.match(/(会议|开会|拜访|培训|验收|调研|参观)[^，,。；;\s]*/);
       if (m) return m[0];
     }
     return "出差对接";
   }
 
+  function extractTripDestination(text) {
+    const q = String(text || "").trim();
+    if (!q) return "";
+    let m = q.match(/(?:上周|本周|上星期|这周|下星期)([\u4e00-\u9fa5]{2,4})出差/);
+    if (m) return m[1].replace(/市$/, "");
+    m = q.match(/([\u4e00-\u9fa5]{2,4})出差/);
+    if (m) return m[1].replace(/市$/, "");
+    m = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12}?)(?:市)?(?=对接|开会|参观|出差|洽谈|培训|调研|办理|参加|处理|进行|订|回|返回|，|,|、|。|；|;|的|和|与|跟|[\s])/);
+    if (m) return m[1].replace(/市$/, "");
+    m = q.match(/去([\u4e00-\u9fa5]{2,8})市/);
+    if (m) return m[1];
+    m = q.match(/(?:到|赴|前往)([\u4e00-\u9fa5]{2,8})/);
+    if (m) return m[1].replace(/(?:对接|开会|参观|出差).*$/, "").replace(/市$/, "");
+    m = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12})/);
+    if (m) {
+      return (m[1]
+        .replace(/(?:对接|开会|参观|出差|洽谈|培训|调研|办理|参加).*$/, "")
+        .replace(/[，,、。；;].*$/, "")
+        .replace(/市$/, "") || m[1]).trim();
+    }
+    return "";
+  }
+
   function parseTripAssistIntent(question) {
     const q = String(question || "").trim();
     if (!q) return null;
-    const destMatch = q.match(/去([\u4e00-\u9fa5A-Za-z0-9]{2,12})/);
-    if (!destMatch) return null;
+    const destination = extractTripDestination(q);
+    if (!destination) return null;
     if (!/周[一二三四五六日天]/.test(q)) return null;
     if (!/(回|返回|返程|回来)/.test(q) && !(/周[一二三四五六日天].*周[一二三四五六日天]/.test(q))) return null;
 
     const startTokenMatch = q.match(/(下|本)?周[一二三四五六日天]/);
-    const endTokenMatch = q.match(/(?:，|,|。)?(?:于)?((?:下|本)?周[一二三四五六日天])\s*(?:回|返回|返程|回来)/) ||
+    const endTokenMatch = q.match(/(?:，|,|。|、)?(?:于)?((?:下|本)?周[一二三四五六日天])\s*(?:回|返回|返程|回来)/) ||
       q.match(/((?:下|本)?周[一二三四五六日天])(?!.*周[一二三四五六日天])/);
 
     const startDate = resolveWeekdayToken(startTokenMatch && startTokenMatch[0], new Date());
@@ -162,7 +185,6 @@
     }
 
     const nights = Math.max(0, Math.round((endDate - startDate) / (24 * 3600 * 1000)));
-    const destination = destMatch[1].replace(/对接.*/, "").replace(/市$/, "") || destMatch[1];
     return {
       destination: destination,
       startDate: startDate,
@@ -557,6 +579,7 @@
     buildRankDeniedReply: buildRankDeniedReply,
     buildAskUserPrompt: buildAskUserPrompt,
     parseTripAssistIntent: parseTripAssistIntent,
+    extractTripDestination: extractTripDestination,
     formatTripDate: formatTripDate,
     buildTripExpenseLines: buildTripExpenseLines,
     renderCollapsedSources: renderCollapsedSources,
